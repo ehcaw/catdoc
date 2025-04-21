@@ -8,6 +8,8 @@ import {GenerateMode} from './components/modes/GenerateMode.js';
 import {ChatMode} from './components/modes/ChatMode.js';
 import {ConfigMode} from './components/modes/ConfigMode.js';
 import {FileNode} from './types/docs.js';
+import {apiKey} from './services/ConfigMangagement.js';
+import {ConfigError} from './components/ConfigError.js';
 
 // Directories to ignore
 const IGNORED_DIRS = new Set([
@@ -198,6 +200,9 @@ const App: React.FC<AppProps> = ({path: initialPath = process.cwd()}) => {
 	switch (activeMode) {
 		case 'generate':
 			// Pass the consistently resolved absolute path
+			if (!apiKey) {
+				return <ConfigError onBack={handleBack} />;
+			}
 			return <GenerateMode workspacePath={workspacePath} onBack={handleBack} />;
 		case 'chat':
 			return <ChatMode onBack={handleBack} />;
