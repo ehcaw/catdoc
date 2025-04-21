@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import {Box, Text, useInput} from 'ink';
 
-export type MenuOption = 'generate' | 'chat' | 'config';
+export type MenuOption = 'generate' | 'chat' | 'config' | 'tutorial';
 
 interface MenuProps {
 	onSelect: (option: MenuOption) => void;
@@ -31,6 +31,11 @@ const OPTION_CATS = {
    (  o o  )
    (  =^=  ) 🔧
     (______)`,
+	tutorial: `
+       /\\___/\\     📖
+      (  ^.^  )
+      (  =^=  ) ~
+       (______)`,
 };
 
 export const Menu: React.FC<MenuProps> = ({onSelect}) => {
@@ -39,6 +44,7 @@ export const Menu: React.FC<MenuProps> = ({onSelect}) => {
 		{label: 'Generate Documentation', value: 'generate'},
 		{label: 'Chat with Codebase', value: 'chat'},
 		{label: 'Configuration', value: 'config'},
+		{label: 'Tutorial', value: 'tutorial'},
 	];
 
 	useInput((_, key) => {

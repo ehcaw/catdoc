@@ -16,6 +16,7 @@ import {
 	loadCache,
 } from './services/treesitter.js';
 import Parser from 'tree-sitter';
+import Tutorial from './components/Tutorial.js';
 
 /**
  * Interface representing a node in the file tree.
@@ -698,6 +699,8 @@ const App: React.FC<AppProps> = ({path: initialPath = process.cwd()}) => {
 			return <ChatMode onBack={handleBack} />;
 		case 'config':
 			return <ConfigMode onBack={handleBack} />;
+		case 'tutorial':
+			return <Tutorial onBack={handleBack} />;
 		default:
 			debugLog(`Invalid mode encountered: ${activeMode}. Returning to menu.`);
 			setActiveMode(null);
