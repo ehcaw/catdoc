@@ -6,16 +6,12 @@ import {
 	generateHash,
 	getTreeJsonPath,
 	updateFileHashes,
-} from '../treesitter.js';
+} from './treesitter.js';
 import {apiKey} from './ConfigMangagement.js';
 
 const DEBUG = true;
 const LOGS_DIR = path.join(process.cwd(), 'logs');
-const LOG_FILE = path.join(LOGS_DIR, 'dynadocs-debug.log');
-
-// Move these inside the function to avoid startup errors
-// const treeJsonPath = getTreeJsonPath(process.cwd());
-// const treeJson = fs.readFileSync(treeJsonPath);
+const LOG_FILE = path.join(LOGS_DIR, 'catdoc-debug.log');
 
 const googleAi = new GoogleGenAI({apiKey: apiKey});
 

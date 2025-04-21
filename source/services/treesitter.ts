@@ -8,7 +8,7 @@ import TypeScriptModule = require('tree-sitter-typescript');
 const TypeScriptLang = TypeScriptModule.typescript;
 const TSXLang = TypeScriptModule.tsx;
 import * as crypto from 'crypto';
-import {generateDocStrings} from './services/DocStringManager.js';
+import {generateDocStrings} from './DocStringManager.js';
 
 const IMPORTANT_EXTENSIONS = ['.js', '.jsx', '.ts', '.tsx', '.py'];
 
@@ -48,7 +48,7 @@ interface ProjectCache {
 // --- Debug Logging ---
 const DEBUG = true;
 const LOGS_DIR = path.join(process.cwd(), 'logs');
-const LOG_FILE = path.join(LOGS_DIR, 'dynadocs-debug.log');
+const LOG_FILE = path.join(LOGS_DIR, 'catdoc-debug.log');
 
 const debugLog = (message: string) => {
 	if (DEBUG) {
@@ -160,7 +160,7 @@ export function getTreeJsonPath(rootDir: string): string {
 	return path.join(rootDir, `${safeRootDirName}.tree.json`);
 }
 
-function loadCache(rootDir: string): ProjectCache {
+export function loadCache(rootDir: string): ProjectCache {
 	const cachePath = getCachePath(rootDir);
 	if (fs.existsSync(cachePath)) {
 		try {
@@ -287,6 +287,50 @@ function hasFileChanged(
 		debugLog(`Error checking if file changed ${filePath}: ${error}`);
 		return {changed: true, hash: ''}; // Default to changed if we can't check
 	}
+}
+
+export function getDiffs(
+	startingPath: string,
+	cache: ProjectCache,
+	diffs: string[] = [],
+): string[] {
+	try {
+		const stats = fs.statSync(startingPath);
+
+		if (stats.isFile()) {
+			// For files, check if changed and add to diffs
+			const fileStatus = hasFileChanged(startingPath, cache);
+			if (
+				fileStatus.changed &&
+				path.extname(startingPath) in IMPORTANT_EXTENSIONS
+			) {
+				// Convert to relative path if it's not already
+				const relativePath = path.isAbsolute(startingPath)
+					? path.relative(process.cwd(), startingPath)
+					: startingPath;
+				diffs.push(relativePath);
+				debugLog(`Found changed file: ${relativePath}`);
+			}
+		} else if (stats.isDirectory()) {
+			// Skip ignored directories
+			const baseName = path.basename(startingPath);
+			if (['node_modules', '.git', 'dist', 'logs'].includes(baseName)) {
+				return diffs;
+			}
+
+			// Process all children in the directory
+			const children = fs.readdirSync(startingPath);
+			for (const child of children) {
+				const childPath = path.join(startingPath, child);
+				// Recursively check each child
+				getDiffs(childPath, cache, diffs);
+			}
+		}
+	} catch (error) {
+		debugLog(`Error checking diffs at ${startingPath}: ${error}`);
+	}
+
+	return diffs;
 }
 
 // --- Structure Extraction ---

@@ -10,7 +10,11 @@ import {Menu, MenuOption} from './components/Menu.js';
 import {updateApiKey} from './services/ConfigMangagement.js';
 import ChatInterface from './components/ChatInterface.js'; // Adjusted import path based on potential structure
 import clipboard from 'clipboardy'; // Import a clipboard library
-import {generateDirectoryTreeJson} from './treesitter.js';
+import {
+	generateDirectoryTreeJson,
+	getDiffs,
+	loadCache,
+} from './services/treesitter.js';
 import Parser from 'tree-sitter';
 
 /**
@@ -82,7 +86,7 @@ const COMMON_FILES = new Set([
 
 const DEBUG = true;
 const LOGS_DIR = path.join(process.cwd(), 'logs');
-const LOG_FILE = path.join(LOGS_DIR, 'dynadocs-debug.log');
+const LOG_FILE = path.join(LOGS_DIR, 'catdoc-debug.log');
 
 // Initialize logging first
 try {
@@ -337,6 +341,45 @@ const GenerateMode: React.FC<{
 		}
 	}, [workspacePath]); // Only depends on workspacePath
 
+	// Add this new effect that properly handles documentation generation
+	useEffect(() => {
+		async function generateDocumentation() {
+			try {
+				// First ensure tree is generated
+				setLoadingMessage('Generating code tree...');
+				const parser = new Parser();
+				const cache = loadCache(workspacePath);
+				const diffs = getDiffs(workspacePath, cache, []);
+				await generateDirectoryTreeJson(workspacePath, parser, true, true);
+
+				// Then find changed files
+				setLoadingMessage('Finding changed files...');
+
+				// Only proceed if there are changes
+				if (diffs.length > 0) {
+					setLoadingMessage(
+						`Generating documentation for ${diffs.length} changed files...`,
+					);
+					debugLog(`Found ${diffs.length} changed files: ${diffs.join(', ')}`);
+
+					// Generate documentation for each file
+					await docManager.generateAllDocumentation(diffs);
+					debugLog('Documentation generation complete');
+				} else {
+					debugLog('No changed files found, skipping documentation generation');
+				}
+			} catch (error) {
+				debugLog(`Error in documentation generation: ${error}`);
+				// Don't set error state here - we want the UI to still work
+			}
+		}
+
+		// Only run if we have a valid workspace
+		if (workspacePath && fs.existsSync(workspacePath)) {
+			generateDocumentation();
+		}
+	}, [workspacePath, docManager]);
+
 	useEffect(() => {
 		if (copySuccess) {
 			const timer = setTimeout(() => setCopySuccess(false), 2000);
@@ -378,8 +421,11 @@ const GenerateMode: React.FC<{
 					return;
 				}
 
-				const fileName = path.basename(filePath);
-
+				const temp = path.relative(workspacePath, filePath);
+				const fileName =
+					temp.split('/').length > 1
+						? temp.split('/').slice(1).join('/')
+						: temp;
 				// Handle common files - show preview
 				if (isCommonFile(fileName)) {
 					debugLog(`Reading common file preview: ${absolutePath}`);
@@ -391,7 +437,7 @@ const GenerateMode: React.FC<{
 
 				// For other files, try to get docs from DocManager using relative path
 				debugLog(`Getting documentation for relative path: ${filePath}`);
-				const doc = docManager.getDocumentation(filePath); // Use relative path
+				const doc = docManager.getDocumentation(fileName); // Use relative path
 
 				if (doc && doc.summary) {
 					debugLog(`Documentation found for: ${filePath}`);
@@ -625,11 +671,6 @@ const App: React.FC<AppProps> = ({path: initialPath = process.cwd()}) => {
 
 	const [activeMode, setActiveMode] = useState<MenuOption | null>(null);
 	const {exit} = useApp();
-
-	useEffect(() => {
-		const parser = new Parser();
-		generateDirectoryTreeJson(initialPath, parser);
-	}, [initialPath]);
 
 	const handleMenuSelect = (option: MenuOption) => {
 		setActiveMode(option);

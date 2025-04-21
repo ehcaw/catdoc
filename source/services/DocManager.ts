@@ -8,7 +8,7 @@ import {apiKey} from './ConfigMangagement.js';
 // Debug logging setup
 const DEBUG = true;
 const LOGS_DIR = path.join(process.cwd(), 'logs');
-const LOG_FILE = path.join(LOGS_DIR, 'dynadocs-debug.log');
+const LOG_FILE = path.join(LOGS_DIR, 'catdoc-debug.log');
 
 // Initialize logging
 try {
@@ -78,7 +78,7 @@ export class DocManager {
 
 	private normalizePath(filePath: string): string {
 		// Remove any leading davishacks/ from the file path
-		return filePath.replace(/^dynadocs\/+/, '');
+		return filePath.replace(/^catdoc\/+/, '');
 	}
 
 	private loadDocs(): ProjectDocumentation {
