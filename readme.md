@@ -5,6 +5,7 @@
 ## Install
 
 ```bash
+$ chmod +x ./dist/cli.js
 $ npm install --global catdoc
 ```
 

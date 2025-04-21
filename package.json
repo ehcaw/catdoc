@@ -3,7 +3,7 @@
 	"version": "0.0.0",
 	"license": "MIT",
 	"bin": {
-		"dynadocs": "./dist/cli.js"
+		"catdoc": "./dist/cli.js"
 	},
 	"type": "module",
 	"engines": {

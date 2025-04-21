@@ -68,6 +68,7 @@ const INTERESTING_EXTENSIONS = new Set([
 	'.c',
 	'.h',
 	'.hpp',
+	'.json',
 	// '.md', // Generally don't auto-document markdown itself
 	// '.txt', // Generally don't auto-document text files
 ]);
@@ -159,22 +160,23 @@ const isCommonFile = (filename: string): boolean => {
 
 // This function provides the structure for the FileTree UI component
 // It does NOT use tree-sitter and doesn't include detailed code items or hashes.
+// This function provides the structure for the FileTree UI component
+// It does NOT use tree-sitter and doesn't include detailed code items or hashes.
 const readDirectoryForUI = (dirPath: string, level = 0): FileNode => {
 	const indent = '  '.repeat(level);
 	// Use the resolved absolute path internally for consistency
 	const absoluteDirPath = path.resolve(dirPath);
 	const name = path.basename(absoluteDirPath);
-	// debugLog(`${indent}Reading UI structure for: ${absoluteDirPath}`);
 
 	try {
-		const stats = fs.statSync(absoluteDirPath); // Use absolute path
+		const stats = fs.statSync(absoluteDirPath);
 
 		if (stats.isDirectory()) {
 			if (IGNORED_DIRS.has(name) || name === '.git') {
 				return {name, type: 'directory', children: []};
 			}
 
-			const items = fs.readdirSync(absoluteDirPath); // Use absolute path
+			const items = fs.readdirSync(absoluteDirPath);
 			const children = items
 				.map(item => {
 					// Construct the full path using resolve to ensure it's absolute
@@ -184,12 +186,20 @@ const readDirectoryForUI = (dirPath: string, level = 0): FileNode => {
 					return readDirectoryForUI(fullPath, level + 1);
 				})
 				.filter((child): child is FileNode => {
-					// Filter logic remains the same
+					// Filter logic
 					if (child === null) return false;
-					if (child.type === 'file') return true;
+
+					// For files, check if the extension is in INTERESTING_EXTENSIONS
+					if (child.type === 'file') {
+						const ext = path.extname(child.name).toLowerCase();
+						return INTERESTING_EXTENSIONS.has(ext);
+					}
+
+					// For directories, keep only those with children
 					if (child.type === 'directory') {
 						return Array.isArray(child.children) && child.children.length > 0;
 					}
+
 					return false;
 				});
 
@@ -394,7 +404,7 @@ const GenerateMode: React.FC<{
 			// filePath received from FileTree is relative to the root displayed by FileTree
 			setSelectedFile(filePath);
 			setCopySuccess(false);
-			setError(null); // Clear previous file-specific errors
+			setError(null);
 			setSelectedFileContent(null);
 			setSelectedFileDocs(null);
 
@@ -418,15 +428,22 @@ const GenerateMode: React.FC<{
 				// Basic check if the resolved path exists before reading
 				if (!fs.existsSync(absolutePath)) {
 					debugLog(`Selected file path does not exist: ${absolutePath}`);
-					setError(`File not found: ${filePath}`); // Show relative path in error
+					setError(`File not found: ${filePath}`);
 					return;
 				}
 
-				const temp = path.relative(workspacePath, filePath);
-				const fileName =
-					temp.split('/').length > 1
-						? temp.split('/').slice(1).join('/')
-						: temp;
+				// Extract the file name correctly based on workspace root
+				// This is the key fix - don't use path.relative here
+				let fileName = filePath;
+
+				// If the path starts with workspace name, remove it to avoid duplication
+				const workspaceMatch = new RegExp(`^${workspaceBaseName}/`);
+				if (workspaceMatch.test(fileName)) {
+					fileName = fileName.replace(workspaceMatch, '');
+				}
+
+				debugLog(`Using fileName: ${fileName} for documentation lookup`);
+
 				// Handle common files - show preview
 				if (isCommonFile(fileName)) {
 					debugLog(`Reading common file preview: ${absolutePath}`);
@@ -437,22 +454,23 @@ const GenerateMode: React.FC<{
 				}
 
 				// For other files, try to get docs from DocManager using relative path
-				debugLog(`Getting documentation for relative path: ${filePath}`);
-				const doc = docManager.getDocumentation(fileName); // Use relative path
+				const doc = docManager.getDocumentation(fileName);
 
 				if (doc && doc.summary) {
-					debugLog(`Documentation found for: ${filePath}`);
+					debugLog(`Documentation found for: ${fileName}`);
 					setSelectedFileContent(
 						doc.content || doc.preview || 'No content available',
 					);
 					setSelectedFileDocs(doc.summary);
 				} else {
-					debugLog(
-						`No cached documentation for: ${filePath}. Showing file preview.`,
-					);
-					const preview = getFilePreview(absolutePath, 15); // Use absolute path
+					debugLog(`No cached documentation for: ${fileName}. Generating...`);
+					await docManager.generateDocumentation(fileName);
+					const preview = getFilePreview(absolutePath, 15);
 					setSelectedFileContent(preview);
-					setSelectedFileDocs('(No documentation generated yet)');
+					const updatedDoc = docManager.getDocumentation(fileName);
+					setSelectedFileDocs(
+						updatedDoc?.summary || 'No documentation generated yet',
+					);
 				}
 			} catch (err) {
 				const errorMsg =
@@ -460,10 +478,10 @@ const GenerateMode: React.FC<{
 				debugLog(
 					`Error during file selection processing for ${absolutePath}: ${err}`,
 				);
-				setError(`Error loading details for ${filePath}: ${errorMsg}`); // Show relative path in error
+				setError(`Error loading details for ${filePath}: ${errorMsg}`);
 			}
 		},
-		[workspacePath, docManager], // Dependencies
+		[workspacePath, docManager],
 	);
 
 	if (error && !isLoading) {
