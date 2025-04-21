@@ -8,7 +8,10 @@ import {GenerateMode} from './components/modes/GenerateMode.js';
 import {ChatMode} from './components/modes/ChatMode.js';
 import {ConfigMode} from './components/modes/ConfigMode.js';
 import {FileNode} from './types/docs.js';
-import {apiKey} from './services/ConfigMangagement.js';
+import {
+	apiKey,
+	gitignoreCatdocDirectories,
+} from './services/ConfigMangagement.js';
 import {ConfigError} from './components/ConfigError.js';
 
 // Directories to ignore
@@ -196,6 +199,8 @@ const App: React.FC<AppProps> = ({path: initialPath = process.cwd()}) => {
 	if (activeMode === null) {
 		return <Menu onSelect={handleMenuSelect} />;
 	}
+
+	gitignoreCatdocDirectories(initialPath);
 
 	switch (activeMode) {
 		case 'generate':
