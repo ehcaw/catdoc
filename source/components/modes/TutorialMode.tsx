@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import {Box, Text, useInput} from 'ink';
-import {LoadingCat} from './LoadingCat.js';
+import {LoadingCat} from '../LoadingCat.js';
 
 interface TutorialProps {
 	onBack: () => void;
