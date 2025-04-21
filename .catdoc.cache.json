@@ -1,0 +1,53 @@
+{
+  "files": {
+    "/Users/ryannguyen/projects/typescript/catdoc/source/app.tsx": {
+      "file_hash": "dd4b2ddce4cf8351211610fc834044d2",
+      "lastParsed": 1745216666300
+    },
+    "/Users/ryannguyen/projects/typescript/catdoc/source/cli.tsx": {
+      "file_hash": "d8d110b5a8eaa11a07388ca4e6526f21",
+      "lastParsed": 1745216666307
+    },
+    "/Users/ryannguyen/projects/typescript/catdoc/source/components/ChatInterface.tsx": {
+      "file_hash": "4c506dd3245caf735c83d8bcaef0d3fd",
+      "lastParsed": 1745216666310
+    },
+    "/Users/ryannguyen/projects/typescript/catdoc/source/components/FileTree.tsx": {
+      "file_hash": "6089fcc0de5901fec9cf4ad3c283e7af",
+      "lastParsed": 1745216666312
+    },
+    "/Users/ryannguyen/projects/typescript/catdoc/source/components/LettaService.tsx": {
+      "file_hash": "4186fd42842a8c15c6092d5bda85e819",
+      "lastParsed": 1745216666314
+    },
+    "/Users/ryannguyen/projects/typescript/catdoc/source/components/LoadingCat.tsx": {
+      "file_hash": "b7cb33cd9dd00de990f8549dc8ec1ce2",
+      "lastParsed": 1745216666316
+    },
+    "/Users/ryannguyen/projects/typescript/catdoc/source/components/Menu.tsx": {
+      "file_hash": "b4e298fbd63e9b5640aebcbca444d838",
+      "lastParsed": 1745216666318
+    },
+    "/Users/ryannguyen/projects/typescript/catdoc/source/services/ConfigMangagement.ts": {
+      "file_hash": "57d69909585bd3650f6297df9b510875",
+      "lastParsed": 1745216666319
+    },
+    "/Users/ryannguyen/projects/typescript/catdoc/source/services/DocManager.ts": {
+      "file_hash": "0ee0096156c798db497616efa41cd307",
+      "lastParsed": 1745216666324
+    },
+    "/Users/ryannguyen/projects/typescript/catdoc/source/services/DocStringManager.ts": {
+      "file_hash": "1b0d75fa99d6852e01c1604a16dfda3b",
+      "lastParsed": 1745216666326
+    },
+    "/Users/ryannguyen/projects/typescript/catdoc/source/treesitter.ts": {
+      "file_hash": "e64ae4a4bb6d15b7db531083560306fc",
+      "lastParsed": 1745216666328
+    },
+    "/Users/ryannguyen/projects/typescript/catdoc/source/types/docs.ts": {
+      "file_hash": "7e5e70d1521688e38a197199b3ad6da3",
+      "lastParsed": 1745216666332
+    }
+  },
+  "lastUpdated": 1745216666333
+}

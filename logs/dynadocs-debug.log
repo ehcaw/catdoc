@@ -1,0 +1,48 @@
+=== New Session Started at 2025-04-21T06:24:26.261Z ===
+[2025-04-21T06:24:26.262Z] Logging system initialized
+[2025-04-21T06:24:26.275Z] Resolved workspace path: /Users/ryannguyen/projects/typescript/catdoc
+[2025-04-21T06:24:26.296Z] === Starting directory scan for /Users/ryannguyen/projects/typescript/catdoc  ===
+[2025-04-21T06:24:26.299Z] Loaded .gitignore rules from /Users/ryannguyen/projects/typescript/catdoc/.gitignore
+[2025-04-21T06:24:26.299Z] Added implicit ignores: node_modules, .git, *.tree.json, logs, *.cache.json
+[2025-04-21T06:24:26.299Z] Loaded existing tree structure
+[2025-04-21T06:24:26.303Z] Parser language set to: [object Object] for scheme: tsx file: /Users/ryannguyen/projects/typescript/catdoc/source/app.tsx
+[2025-04-21T06:24:26.306Z] Compiled query for scheme: tsx
+[2025-04-21T06:24:26.307Z]     [Updated Structure] For changed file: app.tsx (13 root items found)
+[2025-04-21T06:24:26.307Z] Parser language set to: [object Object] for scheme: tsx file: /Users/ryannguyen/projects/typescript/catdoc/source/cli.tsx
+[2025-04-21T06:24:26.309Z] Compiled query for scheme: tsx
+[2025-04-21T06:24:26.310Z]     [Updated Structure] For changed file: cli.tsx (1 root items found)
+[2025-04-21T06:24:26.310Z] Parser language set to: [object Object] for scheme: tsx file: /Users/ryannguyen/projects/typescript/catdoc/source/components/ChatInterface.tsx
+[2025-04-21T06:24:26.312Z] Compiled query for scheme: tsx
+[2025-04-21T06:24:26.312Z]     [Updated Structure] For changed file: ChatInterface.tsx (1 root items found)
+[2025-04-21T06:24:26.312Z] Parser language set to: [object Object] for scheme: tsx file: /Users/ryannguyen/projects/typescript/catdoc/source/components/FileTree.tsx
+[2025-04-21T06:24:26.314Z] Compiled query for scheme: tsx
+[2025-04-21T06:24:26.314Z]     [Updated Structure] For changed file: FileTree.tsx (4 root items found)
+[2025-04-21T06:24:26.314Z] Parser language set to: [object Object] for scheme: tsx file: /Users/ryannguyen/projects/typescript/catdoc/source/components/LettaService.tsx
+[2025-04-21T06:24:26.316Z] Compiled query for scheme: tsx
+[2025-04-21T06:24:26.316Z]     [Updated Structure] File: LettaService.tsx (0 items found)
+[2025-04-21T06:24:26.316Z] Parser language set to: [object Object] for scheme: tsx file: /Users/ryannguyen/projects/typescript/catdoc/source/components/LoadingCat.tsx
+[2025-04-21T06:24:26.318Z] Compiled query for scheme: tsx
+[2025-04-21T06:24:26.318Z]     [Updated Structure] For changed file: LoadingCat.tsx (1 root items found)
+[2025-04-21T06:24:26.318Z] Parser language set to: [object Object] for scheme: tsx file: /Users/ryannguyen/projects/typescript/catdoc/source/components/Menu.tsx
+[2025-04-21T06:24:26.319Z] Compiled query for scheme: tsx
+[2025-04-21T06:24:26.319Z]     [Updated Structure] For changed file: Menu.tsx (1 root items found)
+[2025-04-21T06:24:26.321Z] Parser language set to: [object Object] for scheme: typescript file: /Users/ryannguyen/projects/typescript/catdoc/source/services/ConfigMangagement.ts
+[2025-04-21T06:24:26.324Z] Compiled query for scheme: typescript
+[2025-04-21T06:24:26.324Z]     [Updated Structure] For changed file: ConfigMangagement.ts (2 root items found)
+[2025-04-21T06:24:26.324Z] Parser language set to: [object Object] for scheme: typescript file: /Users/ryannguyen/projects/typescript/catdoc/source/services/DocManager.ts
+[2025-04-21T06:24:26.326Z] Compiled query for scheme: typescript
+[2025-04-21T06:24:26.326Z]     [Updated Structure] For changed file: DocManager.ts (2 root items found)
+[2025-04-21T06:24:26.326Z] Parser language set to: [object Object] for scheme: typescript file: /Users/ryannguyen/projects/typescript/catdoc/source/services/DocStringManager.ts
+[2025-04-21T06:24:26.328Z] Compiled query for scheme: typescript
+[2025-04-21T06:24:26.328Z]     [Updated Structure] For changed file: DocStringManager.ts (3 root items found)
+[2025-04-21T06:24:26.328Z] Parser language set to: [object Object] for scheme: typescript file: /Users/ryannguyen/projects/typescript/catdoc/source/treesitter.ts
+[2025-04-21T06:24:26.331Z] Compiled query for scheme: typescript
+[2025-04-21T06:24:26.332Z]     [Updated Structure] For changed file: treesitter.ts (23 root items found)
+[2025-04-21T06:24:26.332Z] Parser language set to: [object Object] for scheme: typescript file: /Users/ryannguyen/projects/typescript/catdoc/source/types/docs.ts
+[2025-04-21T06:24:26.333Z] Compiled query for scheme: typescript
+[2025-04-21T06:24:26.333Z]     [Updated Structure] File: docs.ts (0 items found)
+[2025-04-21T06:24:26.333Z] Cache saved to /Users/ryannguyen/projects/typescript/catdoc/.catdoc.cache.json
+[2025-04-21T06:24:26.333Z] Attempting to write directory tree JSON to: /Users/ryannguyen/projects/typescript/catdoc/catdoc.tree.json
+[2025-04-21T06:24:26.334Z] Successfully wrote directory tree JSON to: /Users/ryannguyen/projects/typescript/catdoc/catdoc.tree.json
+[2025-04-21T06:24:26.334Z] === Finished directory scan for /Users/ryannguyen/projects/typescript/catdoc ===
+[2025-04-21T06:24:27.545Z] Resolved workspace path: /Users/ryannguyen/projects/typescript/catdoc

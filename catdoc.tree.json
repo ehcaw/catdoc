@@ -1,0 +1,474 @@
+{
+  "catdoc": {
+    "source": {
+      "app.tsx": {
+        "type": "file_structure",
+        "filePath": "source/app.tsx",
+        "items": [
+          {
+            "type": "function",
+            "name": "debugLog",
+            "startLine": 107,
+            "endLine": 117
+          },
+          {
+            "type": "function",
+            "name": "getFilePreview",
+            "startLine": 127,
+            "endLine": 147
+          },
+          {
+            "type": "function",
+            "name": "isCommonFile",
+            "startLine": 149,
+            "endLine": 153
+          },
+          {
+            "type": "function",
+            "name": "readDirectoryForUI",
+            "startLine": 157,
+            "endLine": 209
+          },
+          {
+            "type": "function",
+            "name": "GenerateMode",
+            "startLine": 225,
+            "endLine": 519
+          },
+          {
+            "type": "function",
+            "name": "initializeUI",
+            "startLine": 276,
+            "endLine": 327
+          },
+          {
+            "type": "function",
+            "name": "ChatMode",
+            "startLine": 522,
+            "endLine": 529
+          },
+          {
+            "type": "function",
+            "name": "ConfigMode",
+            "startLine": 532,
+            "endLine": 614
+          },
+          {
+            "type": "function",
+            "name": "handleSubmit",
+            "startLine": 548,
+            "endLine": 560
+          },
+          {
+            "type": "function",
+            "name": "App",
+            "startLine": 621,
+            "endLine": 665
+          },
+          {
+            "type": "function",
+            "name": "handleMenuSelect",
+            "startLine": 634,
+            "endLine": 636
+          },
+          {
+            "type": "function",
+            "name": "handleBack",
+            "startLine": 638,
+            "endLine": 640
+          },
+          {
+            "type": "function",
+            "name": "getAllFilesFromStructure",
+            "startLine": 671,
+            "endLine": 704
+          }
+        ],
+        "file_hash": "dd4b2ddce4cf8351211610fc834044d2"
+      },
+      "cli.tsx": {
+        "type": "file_structure",
+        "filePath": "source/cli.tsx",
+        "items": [
+          {
+            "type": "function",
+            "name": "generateDocs",
+            "startLine": 50,
+            "endLine": 68
+          }
+        ],
+        "file_hash": "d8d110b5a8eaa11a07388ca4e6526f21"
+      },
+      "components": {
+        "ChatInterface.tsx": {
+          "type": "file_structure",
+          "filePath": "source/components/ChatInterface.tsx",
+          "items": [
+            {
+              "type": "function",
+              "name": "ChatInterface",
+              "startLine": 14,
+              "endLine": 159
+            }
+          ],
+          "file_hash": "4c506dd3245caf735c83d8bcaef0d3fd"
+        },
+        "FileTree.tsx": {
+          "type": "file_structure",
+          "filePath": "source/components/FileTree.tsx",
+          "items": [
+            {
+              "type": "function",
+              "name": "copyToClipboard",
+              "startLine": 22,
+              "endLine": 30
+            },
+            {
+              "type": "function",
+              "name": "flattenTree",
+              "startLine": 33,
+              "endLine": 48
+            },
+            {
+              "type": "function",
+              "name": "FileTree",
+              "startLine": 50,
+              "endLine": 109
+            },
+            {
+              "type": "function",
+              "name": "renderItem",
+              "startLine": 80,
+              "endLine": 102
+            }
+          ],
+          "file_hash": "6089fcc0de5901fec9cf4ad3c283e7af"
+        },
+        "LettaService.tsx": {
+          "type": "file_structure",
+          "filePath": "source/components/LettaService.tsx",
+          "items": [],
+          "file_hash": "4186fd42842a8c15c6092d5bda85e819"
+        },
+        "LoadingCat.tsx": {
+          "type": "file_structure",
+          "filePath": "source/components/LoadingCat.tsx",
+          "items": [
+            {
+              "type": "function",
+              "name": "LoadingCat",
+              "startLine": 55,
+              "endLine": 77
+            }
+          ],
+          "file_hash": "b7cb33cd9dd00de990f8549dc8ec1ce2"
+        },
+        "Menu.tsx": {
+          "type": "file_structure",
+          "filePath": "source/components/Menu.tsx",
+          "items": [
+            {
+              "type": "function",
+              "name": "Menu",
+              "startLine": 36,
+              "endLine": 88
+            }
+          ],
+          "file_hash": "b4e298fbd63e9b5640aebcbca444d838"
+        }
+      },
+      "services": {
+        "ConfigMangagement.ts": {
+          "type": "file_structure",
+          "filePath": "source/services/ConfigMangagement.ts",
+          "items": [
+            {
+              "type": "function",
+              "name": "getProjectRoot",
+              "startLine": 11,
+              "endLine": 21
+            },
+            {
+              "type": "function",
+              "name": "updateApiKey",
+              "startLine": 30,
+              "endLine": 35
+            }
+          ],
+          "file_hash": "57d69909585bd3650f6297df9b510875"
+        },
+        "DocManager.ts": {
+          "type": "file_structure",
+          "filePath": "source/services/DocManager.ts",
+          "items": [
+            {
+              "type": "function",
+              "name": "debugLog",
+              "startLine": 22,
+              "endLine": 32
+            },
+            {
+              "type": "class",
+              "name": "DocManager",
+              "startLine": 38,
+              "endLine": 295,
+              "children": [
+                {
+                  "type": "method",
+                  "name": "constructor",
+                  "startLine": 52,
+                  "endLine": 77
+                },
+                {
+                  "type": "method",
+                  "name": "normalizePath",
+                  "startLine": 79,
+                  "endLine": 82
+                },
+                {
+                  "type": "method",
+                  "name": "loadDocs",
+                  "startLine": 84,
+                  "endLine": 97
+                },
+                {
+                  "type": "method",
+                  "name": "saveDocs",
+                  "startLine": 99,
+                  "endLine": 103
+                },
+                {
+                  "type": "method",
+                  "name": "getChangedFiles",
+                  "startLine": 105,
+                  "endLine": 108
+                },
+                {
+                  "type": "method",
+                  "name": "getFilePreview",
+                  "startLine": 110,
+                  "endLine": 119
+                },
+                {
+                  "type": "method",
+                  "name": "shouldIgnoreFile",
+                  "startLine": 121,
+                  "endLine": 123
+                },
+                {
+                  "type": "method",
+                  "name": "processFileBatch",
+                  "startLine": 125,
+                  "endLine": 154
+                },
+                {
+                  "type": "method",
+                  "name": "generateAllDocumentation",
+                  "startLine": 156,
+                  "endLine": 179
+                },
+                {
+                  "type": "method",
+                  "name": "generateDocumentation",
+                  "startLine": 181,
+                  "endLine": 250
+                },
+                {
+                  "type": "method",
+                  "name": "generateHtml",
+                  "startLine": 252,
+                  "endLine": 290
+                },
+                {
+                  "type": "method",
+                  "name": "getDocumentation",
+                  "startLine": 292,
+                  "endLine": 294
+                }
+              ]
+            }
+          ],
+          "file_hash": "0ee0096156c798db497616efa41cd307"
+        },
+        "DocStringManager.ts": {
+          "type": "file_structure",
+          "filePath": "source/services/DocStringManager.ts",
+          "items": [
+            {
+              "type": "function",
+              "name": "debugLog",
+              "startLine": 33,
+              "endLine": 43
+            },
+            {
+              "type": "function",
+              "name": "generateDocStrings",
+              "startLine": 51,
+              "endLine": 79
+            },
+            {
+              "type": "function",
+              "name": "generateDocstringsForFile",
+              "startLine": 87,
+              "endLine": 184
+            }
+          ],
+          "file_hash": "1b0d75fa99d6852e01c1604a16dfda3b"
+        }
+      },
+      "treesitter.ts": {
+        "type": "file_structure",
+        "filePath": "source/treesitter.ts",
+        "items": [
+          {
+            "type": "function",
+            "name": "debugLog",
+            "startLine": 53,
+            "endLine": 70
+          },
+          {
+            "type": "function",
+            "name": "getLanguageAndQueryScheme",
+            "startLine": 77,
+            "endLine": 109
+          },
+          {
+            "type": "function",
+            "name": "parseFile",
+            "startLine": 111,
+            "endLine": 143
+          },
+          {
+            "type": "function",
+            "name": "generateHash",
+            "startLine": 145,
+            "endLine": 147
+          },
+          {
+            "type": "function",
+            "name": "getCachePath",
+            "startLine": 151,
+            "endLine": 155
+          },
+          {
+            "type": "function",
+            "name": "getTreeJsonPath",
+            "startLine": 157,
+            "endLine": 161
+          },
+          {
+            "type": "function",
+            "name": "loadCache",
+            "startLine": 163,
+            "endLine": 174
+          },
+          {
+            "type": "function",
+            "name": "saveCache",
+            "startLine": 176,
+            "endLine": 185
+          },
+          {
+            "type": "function",
+            "name": "findFileInTree",
+            "startLine": 187,
+            "endLine": 218
+          },
+          {
+            "type": "function",
+            "name": "search",
+            "startLine": 193,
+            "endLine": 216
+          },
+          {
+            "type": "function",
+            "name": "updateFileInTree",
+            "startLine": 220,
+            "endLine": 258
+          },
+          {
+            "type": "function",
+            "name": "searchAndUpdate",
+            "startLine": 229,
+            "endLine": 254
+          },
+          {
+            "type": "function",
+            "name": "loadExistingTree",
+            "startLine": 260,
+            "endLine": 271
+          },
+          {
+            "type": "function",
+            "name": "hasFileChanged",
+            "startLine": 273,
+            "endLine": 290
+          },
+          {
+            "type": "function",
+            "name": "getQueryForLanguage",
+            "startLine": 347,
+            "endLine": 377
+          },
+          {
+            "type": "function",
+            "name": "updateFileHashes",
+            "startLine": 379,
+            "endLine": 447
+          },
+          {
+            "type": "function",
+            "name": "extractStructure",
+            "startLine": 450,
+            "endLine": 667
+          },
+          {
+            "type": "function",
+            "name": "isDirectoryTree",
+            "startLine": 670,
+            "endLine": 672
+          },
+          {
+            "type": "function",
+            "name": "isFileStructure",
+            "startLine": 675,
+            "endLine": 682
+          },
+          {
+            "type": "function",
+            "name": "getNodeFromExistingTree",
+            "startLine": 685,
+            "endLine": 717
+          },
+          {
+            "type": "function",
+            "name": "buildTreeRecursive",
+            "startLine": 720,
+            "endLine": 855
+          },
+          {
+            "type": "function",
+            "name": "generateDirectoryTreeJson",
+            "startLine": 870,
+            "endLine": 981
+          },
+          {
+            "type": "function",
+            "name": "monitorDirectoryChanges",
+            "startLine": 993,
+            "endLine": 1042
+          }
+        ],
+        "file_hash": "e64ae4a4bb6d15b7db531083560306fc"
+      },
+      "types": {
+        "docs.ts": {
+          "type": "file_structure",
+          "filePath": "source/types/docs.ts",
+          "items": [],
+          "file_hash": "7e5e70d1521688e38a197199b3ad6da3"
+        }
+      }
+    }
+  }
+}
