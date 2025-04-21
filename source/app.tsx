@@ -10,6 +10,7 @@ import {ConfigMode} from './components/modes/ConfigMode.js';
 import {FileNode} from './types/docs.js';
 import {
 	apiKey,
+	getDebugMode,
 	gitignoreCatdocDirectories,
 } from './services/ConfigMangagement.js';
 import {ConfigError} from './components/ConfigError.js';
@@ -56,7 +57,7 @@ const COMMON_FILES = new Set([
 	'README',
 ]);
 
-const DEBUG = true;
+const DEBUG = getDebugMode();
 const LOGS_DIR = path.join(process.cwd(), 'logs');
 const LOG_FILE = path.join(LOGS_DIR, 'catdoc-debug.log');
 

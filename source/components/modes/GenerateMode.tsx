@@ -1,11 +1,6 @@
 import React, {useState, useCallback, useEffect} from 'react';
 import {useInput, Box, Text} from 'ink';
 import Parser from 'tree-sitter';
-import {
-	loadCache,
-	getDiffs,
-	generateDirectoryTreeJson,
-} from '../../services/treesitter.js';
 import clipboard from 'clipboardy';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -14,6 +9,12 @@ import {DocManager} from '../../services/DocManager.js';
 import {FileNode} from '../../types/docs.js';
 import {LoadingCat} from '../LoadingCat.js';
 import {FileTree} from '../FileTree.js';
+import {getDebugMode} from '../../services/ConfigMangagement.js';
+import {
+	loadCache,
+	getDiffs,
+	generateDirectoryTreeJson,
+} from '../../services/treesitter.js';
 
 export const GenerateMode: React.FC<{
 	workspacePath: string;
@@ -376,7 +377,7 @@ const isCommonFile = (filename: string): boolean => {
 	return COMMON_FILES.has(ext) || COMMON_FILES.has(basename);
 };
 
-const DEBUG = true;
+const DEBUG = getDebugMode();
 const LOGS_DIR = path.join(process.cwd(), 'logs');
 const LOG_FILE = path.join(LOGS_DIR, 'catdoc-debug.log');
 

@@ -7,9 +7,9 @@ import {
 	getTreeJsonPath,
 	updateFileHashes,
 } from './treesitter.js';
-import {apiKey} from './ConfigMangagement.js';
+import {apiKey, getDebugMode} from './ConfigMangagement.js';
 
-const DEBUG = true;
+const DEBUG = getDebugMode();
 const LOGS_DIR = path.join(process.cwd(), 'logs');
 const LOG_FILE = path.join(LOGS_DIR, 'catdoc-debug.log');
 

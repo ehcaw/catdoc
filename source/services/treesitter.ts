@@ -9,6 +9,7 @@ const TypeScriptLang = TypeScriptModule.typescript;
 const TSXLang = TypeScriptModule.tsx;
 import * as crypto from 'crypto';
 import {generateDocStrings} from './DocStringManager.js';
+import {getDebugMode} from './ConfigMangagement.js';
 
 const IMPORTANT_EXTENSIONS = ['.js', '.jsx', '.ts', '.tsx', '.py'];
 
@@ -46,7 +47,7 @@ interface ProjectCache {
 }
 
 // --- Debug Logging ---
-const DEBUG = true;
+const DEBUG = getDebugMode();
 const LOGS_DIR = path.join(process.cwd(), 'logs');
 const LOG_FILE = path.join(LOGS_DIR, 'catdoc-debug.log');
 

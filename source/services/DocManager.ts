@@ -3,10 +3,10 @@ import path from 'node:path';
 import {simpleGit, SimpleGit} from 'simple-git';
 import {GoogleGenAI} from '@google/genai';
 import {FileDocumentation, ProjectDocumentation} from '../types/docs.js';
-import {apiKey} from './ConfigMangagement.js';
+import {apiKey, getDebugMode} from './ConfigMangagement.js';
 
 // Debug logging setup
-const DEBUG = true;
+const DEBUG = getDebugMode();
 const LOGS_DIR = path.join(process.cwd(), 'logs');
 const LOG_FILE = path.join(LOGS_DIR, 'catdoc-debug.log');
 

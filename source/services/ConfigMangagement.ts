@@ -100,3 +100,28 @@ export function gitignoreCatdocDirectories(directoryPath: string): void {
 		}
 	} catch (error) {}
 }
+
+/**
+ * Updates the debug mode setting in the configuration file
+ * @param enabled Whether debug mode should be enabled
+ */
+export function updateDebugMode(enabled: boolean) {
+	let configContents = fs.readFileSync(configPath, {encoding: 'utf8'});
+	let configJson = JSON.parse(configContents);
+	configJson.debug_mode = enabled;
+	fs.writeFileSync(configPath, JSON.stringify(configJson, null, 2));
+}
+
+/**
+ * Gets the current debug mode setting from the configuration file
+ * @returns Whether debug mode is enabled
+ */
+export function getDebugMode(): boolean {
+	try {
+		let configContents = fs.readFileSync(configPath, {encoding: 'utf8'});
+		let configJson = JSON.parse(configContents);
+		return !!configJson.debug_mode; // Convert to boolean
+	} catch (error) {
+		return false; // Default to false if there's an error
+	}
+}
