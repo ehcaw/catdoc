@@ -534,9 +534,14 @@ const GenerateMode: React.FC<{
 					)}
 					{/* Show loading specifically when a file is selected but details aren't loaded yet */}
 					{selectedFile && !selectedFileDocs && !error && (
-						<Text color="gray">
-							Loading details for {path.basename(selectedFile)}...
-						</Text>
+						<Box marginY={1} alignItems="center">
+							<LoadingCat
+								message={`Loading details for ${path.basename(
+									selectedFile,
+								)}...`}
+								isRunning={true}
+							/>
+						</Box>
 					)}
 					{/* Show file-specific error if one occurred during handleFileSelect */}
 					{selectedFile && error && <Text color="red">{error}</Text>}
