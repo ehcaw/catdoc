@@ -6,6 +6,7 @@ export interface FileDocumentation {
 	type: string;
 	hash?: string; // Git hash when last documented
 	preview: string;
+	lastModified: number;
 }
 
 export interface ProjectDocumentation {
@@ -20,4 +21,5 @@ export interface FileNode {
 	children?: FileNode[];
 	documentation?: string;
 	preview?: string;
+	path?: string;
 }
