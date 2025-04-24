@@ -421,6 +421,16 @@ function getQueryForLanguage(language: Language, scheme: string): Query | null {
 	}
 }
 
+export function getStoredFileHash(rootDir: string, fileName: string) {
+	const hashFilePath = getCachePath(rootDir);
+	const hashesJson = JSON.parse(
+		fs.readFileSync(hashFilePath, {encoding: 'utf8'}),
+	);
+	const storedFileHash =
+		hashesJson['files'][fileName]['file_hash'] || 'SENTINEL';
+	return storedFileHash;
+}
+
 export function updateFileHashes(
 	rootDir: string,
 	changedFiles: string[],

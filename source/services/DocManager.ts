@@ -290,6 +290,25 @@ export class DocManager {
 	}
 
 	getDocumentation(filePath: string): FileDocumentation | undefined {
+		console.log(this.projectDocs.files[filePath]);
 		return this.projectDocs.files[filePath];
+	}
+	getFileHash(filePath: string): string {
+		const docs = this.projectDocs.files[filePath];
+		return docs?.hash || '';
+	}
+	async updateDocumentation(filePath: string): Promise<void> {
+		const fileDocs = this.getDocumentation(filePath);
+		console.log(`old file docs: ${JSON.stringify(fileDocs)}`);
+		if (fileDocs) {
+			// fileDocs.content = fs.readFileSync(fileDocs.path, {encoding: 'utf8'});
+			// fileDocs.hash = generateHash(fileDocs.content);
+			// fileDocs.lastUpdated = String(Date.now());
+			// fileDocs.preview = this.getFilePreview(filePath);
+			// fileDocs.summary = await this.generateDocumentation(filePath)
+			const newFileDocs = await this.generateDocumentation(filePath);
+			this.projectDocs.files[filePath] = newFileDocs;
+			console.log(`new file docs: ${this.projectDocs.files[filePath]}`);
+		}
 	}
 }

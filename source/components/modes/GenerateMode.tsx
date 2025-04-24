@@ -14,6 +14,8 @@ import {
 	loadCache,
 	getDiffs,
 	generateDirectoryTreeJson,
+	generateHash,
+	//getStoredFileHash,
 } from '../../services/treesitter.js';
 
 export const GenerateMode: React.FC<{
@@ -236,13 +238,21 @@ export const GenerateMode: React.FC<{
 				}
 
 				// For other files, try to get docs from DocManager using relative path
-				const doc = docManager.getDocumentation(fileName);
+				let doc = docManager.getDocumentation(fileName);
 
 				if (doc && doc.summary) {
 					debugLog(`Documentation found for: ${fileName}`);
+					if (
+						generateHash(fs.readFileSync(doc.path, {encoding: 'utf8'})) !=
+						doc.hash
+					) {
+						debugLog('FILE CHANGED');
+						await docManager.updateDocumentation(doc.path);
+					}
 					setSelectedFileContent(
 						doc.content || doc.preview || 'No content available',
 					);
+
 					setSelectedFileDocs(doc.summary);
 				} else {
 					debugLog(`No cached documentation for: ${fileName}. Generating...`);
