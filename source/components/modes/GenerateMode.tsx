@@ -207,7 +207,7 @@ export const GenerateMode: React.FC<{
 	}, [selectedFile, docManager]); // docManager added as dependency
 
 	useInput(async (input, key) => {
-		if (key.ctrl && input.toLowerCase() === 'b') {
+		if (key.escape && !input) {
 			onBack();
 		} else if (key.shift && input.toUpperCase() === 'C') {
 			await handleCopy(); // Ensure await if handleCopy becomes async
@@ -478,7 +478,7 @@ export const GenerateMode: React.FC<{
 					{error}
 				</Text>
 				<Box marginTop={1}>
-					<Text>Press Ctrl+B to go back.</Text>
+					<Text>Press Esc to go back.</Text>
 					<Text dimColor> (Check catdoc-debug.log for details)</Text>
 				</Box>
 			</Box>
@@ -504,7 +504,7 @@ export const GenerateMode: React.FC<{
 					.git, dist, etc.), or hidden files/folders.
 				</Text>
 				<Box marginTop={1}>
-					<Text>Press Ctrl+B to go back.</Text>
+					<Text>Press Esc to go back.</Text>
 				</Box>
 			</Box>
 		);
@@ -540,7 +540,7 @@ export const GenerateMode: React.FC<{
 					</Text>
 				</Box>
 				<Box justifyContent="space-between" alignItems="center">
-					<Text dimColor>(Ctrl+B: Back | Ctrl+R: Refresh | Shift+C: Copy)</Text>
+					<Text dimColor>(Esc: Back | Ctrl+R: Refresh | Shift+C: Copy)</Text>
 					{/* Status message area */}
 					<Box minWidth={20} justifyContent="flex-end">
 						{statusMessage ? (

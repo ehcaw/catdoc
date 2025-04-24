@@ -1,25 +1,8 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef, useMemo} from 'react';
 import {Box, Text} from 'ink';
 import {useFocus, useInput} from 'ink';
 import clipboardy from 'clipboardy';
-
-interface FileNode {
-	name: string;
-	type: 'file' | 'directory';
-	children?: FileNode[];
-	documentation?: string;
-	preview?: string;
-	path?: string; // Make sure path is in the interface
-}
-
-interface FileTreeProps {
-	files: FileNode;
-	selectedFile: string | null;
-	onSelect: (path: string) => void;
-	level?: number;
-	parentPath?: string;
-	height?: number; // Add height prop
-}
+import {FileNode, FileTreeProps} from '../types/docs.js';
 
 export const copyToClipboard = async (text: string): Promise<void> => {
 	try {
@@ -54,83 +37,236 @@ export const FileTree: React.FC<FileTreeProps> = ({
 	selectedFile,
 	onSelect,
 	level = 0,
-	height, // Use the height prop
+	height,
 }) => {
+	// Basic state
 	const [focusedIndex, setFocusedIndex] = useState(0);
-	const {isFocused} = useFocus({autoFocus: level === 0});
-	const flattenedFiles = flattenTree(files);
 	const [visibleStartIndex, setVisibleStartIndex] = useState(0);
 
+	// Use a simpler focus approach
+	const {isFocused} = useFocus({autoFocus: level === 0});
+
+	// Manage focus state manually for the component
+	const [hasFocus, setHasFocus] = useState(true); // Start with focus
+
+	// Search state
+	const [isSearching, setIsSearching] = useState(false);
+	const [searchQuery, setSearchQuery] = useState('');
+
+	// Prevent scroll adjustment loops
+	const isAdjustingScroll = useRef(false);
+
+	// Function to exit search mode
+	const exitSearchMode = () => {
+		setIsSearching(false);
+		setHasFocus(true); // Explicitly set focus back to true
+	};
+
+	// Get the full flattened file list
+	const flattenedFiles = flattenTree(files);
+
+	// Enhanced filter that preserves folder structure
+	const displayedFiles = useMemo(() => {
+		if (!searchQuery) return flattenedFiles;
+
+		const query = searchQuery.toLowerCase();
+
+		// First, identify all matching paths
+		const matchingPaths = new Set<string>();
+
+		// Add directly matching files and directories
+		flattenedFiles.forEach(item => {
+			if (
+				item.node.name.toLowerCase().includes(query) ||
+				item.path.toLowerCase().includes(query)
+			) {
+				matchingPaths.add(item.path);
+			}
+		});
+
+		// For each matching path, add all parent directories
+		const pathsToInclude = new Set<string>(matchingPaths);
+
+		matchingPaths.forEach(path => {
+			// Split the path into parts
+			const parts = path.split('/');
+
+			// Build up parent paths and add them
+			for (let i = 1; i < parts.length; i++) {
+				const parentPath = parts.slice(0, i).join('/');
+				pathsToInclude.add(parentPath);
+			}
+		});
+
+		// Filter to include only matching files and their parent directories
+		return flattenedFiles.filter(item => {
+			// Keep the item if it's in our paths to include
+			return pathsToInclude.has(item.path);
+		});
+	}, [flattenedFiles, searchQuery]);
+
 	// Calculate how many items we can show based on height
-	const itemsPerPage = height ? Math.max(1, height - 2) : flattenedFiles.length; // -2 for status line & border
+	const reservedLines = isSearching ? 3 : 2; // Extra line for search input
+	const itemsPerPage = height
+		? Math.max(1, height - reservedLines)
+		: displayedFiles.length;
 	const visibleEndIndex = Math.min(
 		visibleStartIndex + itemsPerPage,
-		flattenedFiles.length,
+		displayedFiles.length,
 	);
-	const visibleItems = flattenedFiles.slice(visibleStartIndex, visibleEndIndex);
+	const visibleItems = displayedFiles.slice(visibleStartIndex, visibleEndIndex);
 
-	// Find the selected file index in the flattened tree
+	// Find the selected file index
 	const selectedIndex = selectedFile
-		? flattenedFiles.findIndex(item => item.path === selectedFile)
+		? displayedFiles.findIndex(item => item.path === selectedFile)
 		: -1;
 
-	// Ensure the selected file is visible when it changes
+	// Update internal focus state when external focus changes
 	useEffect(() => {
-		if (selectedIndex >= 0) {
-			if (selectedIndex < visibleStartIndex) {
-				setVisibleStartIndex(selectedIndex);
-			} else if (selectedIndex >= visibleEndIndex) {
-				setVisibleStartIndex(Math.max(0, selectedIndex - itemsPerPage + 1));
-			}
-
-			// Also update focus position to match selection
-			setFocusedIndex(selectedIndex);
+		if (!isSearching) {
+			setHasFocus(isFocused);
 		}
-	}, [selectedFile, selectedIndex]);
+	}, [isFocused, isSearching]);
 
+	// Initial setup
+	useEffect(() => {
+		if (selectedIndex >= 0 && !isAdjustingScroll.current) {
+			setFocusedIndex(selectedIndex);
+
+			if (
+				selectedIndex < visibleStartIndex ||
+				selectedIndex >= visibleStartIndex + itemsPerPage
+			) {
+				isAdjustingScroll.current = true;
+				setVisibleStartIndex(
+					Math.max(
+						0,
+						Math.min(
+							displayedFiles.length - itemsPerPage,
+							selectedIndex - Math.floor(itemsPerPage / 2),
+						),
+					),
+				);
+				setTimeout(() => {
+					isAdjustingScroll.current = false;
+				}, 50);
+			}
+		}
+	}, [
+		selectedFile,
+		displayedFiles.length,
+		searchQuery,
+		visibleStartIndex,
+		itemsPerPage,
+		selectedIndex,
+	]);
+
+	// Reset scroll position when search changes
+	useEffect(() => {
+		// Reset to top when search query changes
+		setVisibleStartIndex(0);
+		// Reset focus to first item
+		if (displayedFiles.length > 0) {
+			setFocusedIndex(0);
+		}
+	}, [searchQuery]);
+
+	// Handle keyboard input
 	useInput(async (input, key) => {
-		if (!isFocused) return;
+		// Handle input based on our internal focus state OR search mode
+		if (!hasFocus && !isSearching) return;
 
+		// Search mode handling
+		if (isSearching) {
+			if (key.escape) {
+				exitSearchMode();
+			} else if (key.return) {
+				exitSearchMode();
+			} else if (key.backspace || key.delete) {
+				setSearchQuery(prev => prev.slice(0, -1));
+			} else if (key.ctrl && input === 'u') {
+				setSearchQuery('');
+			} else if (
+				!key.upArrow &&
+				!key.downArrow &&
+				!key.tab &&
+				!key.pageUp &&
+				!key.pageDown &&
+				!key.ctrl &&
+				!key.meta &&
+				!key.shift &&
+				input.length === 1
+			) {
+				setSearchQuery(prev => prev + input);
+			}
+		} else {
+			// Normal navigation mode
+			if (key.ctrl && input.toLowerCase() === 'k') {
+				setIsSearching(true);
+				setSearchQuery('');
+				return;
+			}
+		}
+
+		// Navigation (available in both modes)
 		if (key.upArrow) {
 			const newIndex = Math.max(0, focusedIndex - 1);
 			setFocusedIndex(newIndex);
 
-			// Scroll up if needed
-			if (newIndex < visibleStartIndex) {
+			if (newIndex < visibleStartIndex && !isAdjustingScroll.current) {
+				isAdjustingScroll.current = true;
 				setVisibleStartIndex(newIndex);
+				setTimeout(() => {
+					isAdjustingScroll.current = false;
+				}, 50);
 			}
 		} else if (key.downArrow) {
-			const newIndex = Math.min(flattenedFiles.length - 1, focusedIndex + 1);
+			const newIndex = Math.min(displayedFiles.length - 1, focusedIndex + 1);
 			setFocusedIndex(newIndex);
 
-			// Scroll down if needed
-			if (newIndex >= visibleEndIndex) {
+			if (newIndex >= visibleEndIndex && !isAdjustingScroll.current) {
+				isAdjustingScroll.current = true;
 				setVisibleStartIndex(visibleStartIndex + 1);
+				setTimeout(() => {
+					isAdjustingScroll.current = false;
+				}, 50);
 			}
 		} else if (key.pageUp && height) {
-			// Page up - move up by page size
 			const newIndex = Math.max(0, focusedIndex - itemsPerPage);
 			setFocusedIndex(newIndex);
-			setVisibleStartIndex(Math.max(0, visibleStartIndex - itemsPerPage));
+
+			if (!isAdjustingScroll.current) {
+				isAdjustingScroll.current = true;
+				setVisibleStartIndex(Math.max(0, newIndex));
+				setTimeout(() => {
+					isAdjustingScroll.current = false;
+				}, 50);
+			}
 		} else if (key.pageDown && height) {
-			// Page down - move down by page size
 			const newIndex = Math.min(
-				flattenedFiles.length - 1,
+				displayedFiles.length - 1,
 				focusedIndex + itemsPerPage,
 			);
 			setFocusedIndex(newIndex);
-			const newStart = Math.min(
-				flattenedFiles.length - itemsPerPage,
-				visibleStartIndex + itemsPerPage,
-			);
-			setVisibleStartIndex(Math.max(0, newStart));
-		} else if (key.return || input === ' ') {
-			const focusedItem = flattenedFiles[focusedIndex];
+
+			if (!isAdjustingScroll.current) {
+				isAdjustingScroll.current = true;
+				const newStart = Math.min(
+					displayedFiles.length - itemsPerPage,
+					newIndex,
+				);
+				setVisibleStartIndex(Math.max(0, newStart));
+				setTimeout(() => {
+					isAdjustingScroll.current = false;
+				}, 50);
+			}
+		} else if ((key.return || input === ' ') && !isSearching) {
+			const focusedItem = displayedFiles[focusedIndex];
 			if (focusedItem && focusedItem.node.type === 'file') {
 				onSelect(focusedItem.path);
 			}
-		} else if (input === 'c') {
-			const focusedItem = flattenedFiles[focusedIndex];
+		} else if (input === 'c' && !isSearching) {
+			const focusedItem = displayedFiles[focusedIndex];
 			if (focusedItem && focusedItem.node.type === 'file') {
 				await copyToClipboard(focusedItem.node.documentation || '');
 			}
@@ -147,43 +283,97 @@ export const FileTree: React.FC<FileTreeProps> = ({
 		const icon =
 			item.node.type === 'directory' ? '📁' : isCommonFile ? '📝' : '📄';
 		const isSelected = selectedFile === item.path;
+		// Use our internal focus state instead of isFocused
 		const isFocusedItem =
-			index + visibleStartIndex === focusedIndex && isFocused;
+			index + visibleStartIndex === focusedIndex && (hasFocus || isSearching);
+
+		// Determine if this item directly matches the search
+		const isDirectMatch =
+			searchQuery &&
+			(item.node.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+				item.path.toLowerCase().includes(searchQuery.toLowerCase()));
+
+		// Display name handling
+		const displayName = item.node.name;
+		const shouldHighlight = searchQuery && !isSearching && isDirectMatch;
+		let highlightStart = -1;
+		let highlightEnd = -1;
+
+		if (shouldHighlight) {
+			const query = searchQuery.toLowerCase();
+			const nameLower = displayName.toLowerCase();
+			if (nameLower.includes(query)) {
+				highlightStart = nameLower.indexOf(query);
+				highlightEnd = highlightStart + query.length;
+			}
+		}
 
 		return (
 			<Box key={item.path}>
 				<Text
 					color={isFocusedItem ? 'blue' : isSelected ? 'green' : undefined}
 					bold={isSelected || isFocusedItem}
-					dimColor={!isFocusedItem && !isSelected}
+					dimColor={
+						(!isFocusedItem && !isSelected) ||
+						(searchQuery.length > 0 && !isDirectMatch)
+					}
 				>
-					{prefix}
-					{icon} {item.node.name}
-					{isFocusedItem && item.node.type === 'file'
-						? ' (Press Enter or Space)'
-						: ''}
+					{`${prefix}${icon} `}
+					{shouldHighlight && highlightStart >= 0 ? (
+						<>
+							{displayName.substring(0, highlightStart)}
+							<Text backgroundColor="yellow" color="black">
+								{displayName.substring(highlightStart, highlightEnd)}
+							</Text>
+							{displayName.substring(highlightEnd)}
+						</>
+					) : (
+						displayName
+					)}
+					{isFocusedItem && item.node.type === 'file' ? ' (Enter/Space)' : ''}
 				</Text>
 			</Box>
 		);
 	};
 
+	// Status message with focus indicator
+	const focusIndicator = hasFocus ? '●' : '○';
+	const statusPosition = `${visibleStartIndex + 1}-${visibleEndIndex} of ${
+		displayedFiles.length
+	}`;
+	const searchStatus = !searchQuery
+		? ''
+		: ` (filtered from ${flattenedFiles.length})`;
+	const searchHint = !isSearching ? 'Ctrl+K:Search' : 'Enter:Accept Esc:Cancel';
+	const navIndicator = `${focusedIndex > 0 ? '↑' : ' '}${
+		focusedIndex < displayedFiles.length - 1 ? '↓' : ' '
+	}`;
+
 	return (
 		<Box flexDirection="column" height={height} overflow="hidden">
-			{/* Only render the visible slice of items for performance */}
-			{visibleItems.map((item, index) => renderItem(item, index))}
-
-			{/* Scrollbar/status info if we're scrolling */}
-			{height && flattenedFiles.length > itemsPerPage && (
-				<Box marginTop={0} justifyContent="space-between" height={1}>
-					<Text dimColor>
-						{visibleStartIndex + 1}-{visibleEndIndex} of {flattenedFiles.length}
-					</Text>
-					<Text dimColor>
-						{focusedIndex > 0 ? '↑' : ' '}{' '}
-						{focusedIndex < flattenedFiles.length - 1 ? '↓' : ' '}
-					</Text>
+			{/* Search bar */}
+			{isSearching && (
+				<Box borderStyle="single" borderColor="yellow" marginBottom={1}>
+					<Text bold>Search: </Text>
+					<Text>{searchQuery}</Text>
+					<Text>█</Text>
 				</Box>
 			)}
+
+			{/* File list */}
+			{visibleItems.length > 0 ? (
+				visibleItems.map((item, index) => renderItem(item, index))
+			) : (
+				<Text dimColor>No matching files found.</Text>
+			)}
+
+			{/* Status bar with focus indicator */}
+			<Box marginTop={0} justifyContent="space-between" height={1}>
+				<Text
+					dimColor
+				>{`${focusIndicator} ${statusPosition}${searchStatus}`}</Text>
+				<Text dimColor>{`${searchHint} ${navIndicator}`}</Text>
+			</Box>
 		</Box>
 	);
 };
