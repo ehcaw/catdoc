@@ -4,7 +4,7 @@ import ChatInterface from '../ChatInterface.js';
 
 export const ChatMode: React.FC<{onBack: () => void}> = ({onBack}) => {
 	useInput((input, key) => {
-		if (key.ctrl && input.toLowerCase() === 'b') {
+		if (key.escape && !input) {
 			onBack();
 		}
 	});

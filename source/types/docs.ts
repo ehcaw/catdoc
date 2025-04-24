@@ -23,3 +23,12 @@ export interface FileNode {
 	preview?: string;
 	path?: string;
 }
+
+export interface FileTreeProps {
+	files: FileNode;
+	selectedFile: string | null;
+	onSelect: (path: string) => void;
+	level?: number;
+	parentPath?: string;
+	height?: number; // Add height prop
+}
