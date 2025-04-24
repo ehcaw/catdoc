@@ -19,9 +19,15 @@
 		"dist"
 	],
 	"dependencies": {
+		"@ai-sdk/google": "^1.2.13",
 		"@google/genai": "^0.9.0",
 		"@inkjs/ui": "^2.0.0",
+		"@langchain/community": "^0.3.41",
+		"@langchain/core": "^0.3.48",
+		"@langchain/google-genai": "^0.2.5",
+		"@langchain/openai": "^0.5.7",
 		"@letta-ai/letta-client": "^0.1.101",
+		"ai": "^4.3.9",
 		"chokidar": "^4.0.3",
 		"clipboardy": "^4.0.0",
 		"crypto": "^1.0.1",
@@ -31,6 +37,7 @@
 		"ink": "^4.1.0",
 		"ink-text-input": "^6.0.0",
 		"meow": "^11.0.0",
+		"neo4j-driver": "^5.28.1",
 		"path": "^0.12.7",
 		"react": "^18.2.0",
 		"simple-git": "^3.22.0",
@@ -41,6 +48,7 @@
 	},
 	"devDependencies": {
 		"@sindresorhus/tsconfig": "^3.0.1",
+		"@types/glob": "^8.1.0",
 		"@types/node": "^22.14.1",
 		"@types/react": "^18.0.32",
 		"@vdemedes/prettier-config": "^2.0.1",
