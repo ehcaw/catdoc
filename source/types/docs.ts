@@ -8,7 +8,6 @@ export interface FileDocumentation {
 	preview: string;
 	lastModified: number;
 }
-
 export interface ProjectDocumentation {
 	version: string;
 	lastUpdated: string;
@@ -31,4 +30,9 @@ export interface FileTreeProps {
 	level?: number;
 	parentPath?: string;
 	height?: number; // Add height prop
+}
+
+export interface GraphDoc {
+	pageContent: string; // for now we will store the summaries and have the ai respond from there
+	metadata: {};
 }

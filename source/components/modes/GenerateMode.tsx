@@ -15,7 +15,7 @@ import {DocManager} from '../../services/DocManager.js';
 import {FileDocumentation, FileNode} from '../../types/docs.js';
 import {LoadingCat} from '../LoadingCat.js';
 import {FileTree} from '../FileTree.js'; // Assuming FileTree can handle height constraints
-import {getDebugMode} from '../../services/ConfigMangagement.js';
+import {getDebugMode} from '../../services/ConfigManagement.js';
 // Removed StdoutContext import
 
 // --- Debug Logging (Keep as is) ---

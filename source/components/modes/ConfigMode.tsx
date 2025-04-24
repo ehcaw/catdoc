@@ -6,7 +6,7 @@ import {
 	updateDebugMode,
 	getDebugMode,
 	apiKey as storedApiKey,
-} from '../../services/ConfigMangagement.js';
+} from '../../services/ConfigManagement.js';
 
 // Function to handle config
 export const ConfigMode: React.FC<{onBack: () => void}> = ({onBack}) => {

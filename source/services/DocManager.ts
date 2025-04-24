@@ -3,8 +3,9 @@ import path from 'node:path';
 import {simpleGit, SimpleGit} from 'simple-git';
 import {GoogleGenAI} from '@google/genai';
 import {FileDocumentation, ProjectDocumentation} from '../types/docs.js';
-import {apiKey, getDebugMode} from './ConfigMangagement.js';
+import {apiKey, getDebugMode} from './ConfigManagement.js';
 import chokidar from 'chokidar';
+import {Neo4jClient} from './Neo4j.js';
 
 // Debug logging setup
 const DEBUG = getDebugMode();
@@ -34,6 +35,18 @@ const debugLog = (message: string) => {
 
 debugLog('DocManager logging initialized');
 
+const config = {
+	url: 'bolt://localhost:7687', // URL for the Neo4j instance
+	username: 'neo4j', // Username for Neo4j authentication
+	password: 'pleaseletmein', // Password for Neo4j authentication
+	indexName: 'vector', // Name of the vector index
+	keywordIndexName: 'keyword', // Name of the keyword index if using hybrid search
+	searchType: 'vector' as const, // Type of search (e.g., vector, hybrid)
+	nodeLabel: 'Chunk', // Label for the nodes in the graph
+	textNodeProperty: 'text', // Property of the node containing text
+	embeddingNodeProperty: 'embedding', // Property of the node containing embedding
+};
+
 // Load environment variables
 
 export class DocManager {
@@ -42,6 +55,7 @@ export class DocManager {
 	private git: SimpleGit;
 	private genAI: GoogleGenAI;
 	private projectDocs: ProjectDocumentation;
+	private neo4jClient: Neo4jClient;
 	public workspacePath: string;
 	private readonly BATCH_SIZE = 5; // Number of concurrent API calls
 	private readonly IGNORED_PATTERNS = [
@@ -62,6 +76,10 @@ export class DocManager {
 		this.docsPath = path.join(this.workspacePath, 'docs');
 		this.htmlPath = path.join(this.docsPath, 'html');
 		this.git = simpleGit(this.workspacePath);
+		this.neo4jClient = new Neo4jClient(config, workspacePath);
+		this.initializeNeo4j().catch(error => {
+			debugLog(`Failed to initialize Neo4j: ${error}`);
+		});
 
 		// Initialize Google Gemini
 		if (!apiKey) {
@@ -157,6 +175,14 @@ export class DocManager {
 		// Load or initialize project documentation
 		this.projectDocs = this.loadDocs();
 		debugLog('DocManager initialization complete');
+	}
+	private async initializeNeo4j() {
+		try {
+			await this.neo4jClient.initialize();
+			debugLog('Neo4j client initialized successfully');
+		} catch (error) {
+			debugLog(`Error initializing Neo4j client: ${error}`);
+		}
 	}
 
 	// Utility debounce function

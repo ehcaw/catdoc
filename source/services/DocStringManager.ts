@@ -7,7 +7,7 @@ import {
 	getTreeJsonPath,
 	updateFileHashes,
 } from './treesitter.js';
-import {apiKey, getDebugMode} from './ConfigMangagement.js';
+import {apiKey, getDebugMode} from './ConfigManagement.js';
 
 const DEBUG = getDebugMode();
 const LOGS_DIR = path.join(process.cwd(), 'logs');

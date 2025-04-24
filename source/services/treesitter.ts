@@ -9,7 +9,7 @@ const TypeScriptLang = TypeScriptModule.typescript;
 const TSXLang = TypeScriptModule.tsx;
 import * as crypto from 'crypto';
 import {generateDocStrings} from './DocStringManager.js';
-import {getDebugMode} from './ConfigMangagement.js';
+import {getDebugMode} from './ConfigManagement.js';
 
 const IMPORTANT_EXTENSIONS = ['.js', '.jsx', '.ts', '.tsx', '.py'];
 

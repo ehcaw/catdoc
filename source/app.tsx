@@ -11,7 +11,7 @@ import {
 	apiKey,
 	getDebugMode,
 	gitignoreCatdocDirectories,
-} from './services/ConfigMangagement.js';
+} from './services/ConfigManagement.js';
 import {ConfigError} from './components/ConfigError.js';
 
 const DEBUG = getDebugMode();
@@ -108,7 +108,7 @@ const App: React.FC<AppProps> = ({path: initialPath = process.cwd()}) => {
 			case 'chat':
 				content = (
 					<Box width={terminalWidth} height={terminalHeight}>
-						<ChatMode onBack={handleBack} />
+						<ChatMode onBack={handleBack} workspacePath={workspacePath} />
 					</Box>
 				);
 				break;
