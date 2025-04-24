@@ -1,5 +1,8 @@
 import React, {useState, useCallback} from 'react';
 import {Box, Text, useInput, useApp} from 'ink';
+import {generateText} from 'ai';
+import {google} from '@ai-sdk/google';
+import {Neo4jClient} from '../services/Neo4j.js';
 
 // Define the structure for a message
 interface Message {
@@ -11,7 +14,7 @@ interface Message {
 /**
  * A terminal-based chatbot interface component using Ink.
  */
-export const ChatInterface: React.FC = () => {
+const ChatInterface: React.FC<{neo4jClient: Neo4jClient}> = ({neo4jClient}) => {
 	// State for the list of messages in the chat
 	const [messages, setMessages] = useState<Message[]>([
 		{
@@ -27,24 +30,51 @@ export const ChatInterface: React.FC = () => {
 	// Access Ink's app context to allow exiting
 	const {exit} = useApp();
 
+	const model = google('gemini-2.5-pro-exp-03-25');
+
 	/**
 	 * Simulates fetching a response from a bot.
 	 * Replace this with your actual bot logic or API call.
 	 */
-	const getBotResponse = useCallback(
-		async (userInput: string): Promise<string> => {
-			// Simulate network delay and processing time
-			await new Promise(resolve => setTimeout(resolve, 1200));
+	const getBotResponse = async (query: string) => {
+		const docs = await neo4jClient.queryDocuments(query);
 
-			// Simple echo response for demonstration
-			return `You said: "${userInput}"`;
-			// Example of potential error:
-			// if (userInput.toLowerCase() === 'error') {
-			//  throw new Error("Simulated bot error");
-			// }
-		},
-		[],
-	);
+		// Format the documents for the prompt
+		const formattedDocs = docs
+			.map(doc => {
+				return `Document: ${doc.metadata['absolutePath']}
+Content: ${doc.pageContent}
+---`;
+			})
+			.join('\n\n');
+
+		// Create the system prompt with the document information
+		const systemPrompt = `You are an intelligent assistant with access to a knowledge base of documents. For each user query, you will receive relevant documents that have been retrieved from a Neo4j vector database.
+
+## Context Documents
+The following documents have been retrieved based on the user's query:
+${formattedDocs}
+
+## Instructions
+1. Base your response primarily on information contained in the provided documents.
+2. If the documents contain clear, relevant information to answer the query, use that information to provide a detailed response.
+3. When referencing specific information from the documents, indicate which document it came from (e.g., "According to [filename]...").
+4. If the documents don't contain sufficient information to fully answer the query, clearly state this limitation and provide the best response you can based on your general knowledge.
+5. Keep responses concise yet comprehensive, focusing on the most relevant information.
+6. If code examples would be helpful, include them formatted appropriately.
+7. When technical concepts are discussed, provide clear explanations suitable for the user's apparent knowledge level.
+8. Do not make up information that isn't supported by the documents or your general knowledge.
+
+The user's query is: ${query}`;
+
+		const {text} = await generateText({
+			model: model,
+			system: systemPrompt,
+			prompt: query,
+		});
+
+		return text;
+	};
 
 	/**
 	 * Handles the submission of the user's input.

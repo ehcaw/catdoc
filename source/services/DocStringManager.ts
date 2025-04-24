@@ -7,7 +7,7 @@ import {
 	getTreeJsonPath,
 	updateFileHashes,
 } from './treesitter.js';
-import {apiKey, getDebugMode} from './ConfigMangagement.js';
+import {apiKey, getDebugMode} from './ConfigManagement.js';
 
 const DEBUG = getDebugMode();
 const LOGS_DIR = path.join(process.cwd(), 'logs');
@@ -102,44 +102,44 @@ async function generateDocstringsForFile(filePath: string): Promise<boolean> {
 
 		// Update the prompt to specifically ask for raw code without Markdown formatting
 		const docString = `
- Please analyze the following source code and generate comprehensive docstrings for every function, class, method, and interface. The file type is "${fileType}" and requires language-appropriate documentation.
+Please analyze the following source code and generate docstrings for complex or non-obvious functions, classes, methods, and interfaces. The file type is "${fileType}" and requires language-appropriate documentation.
 
- For each element that needs documentation:
- 1. Create a descriptive summary of what it does
- 2. Document all parameters, including their types and purpose
- 3. Document return values with their types and descriptions
- 4. Document any errors or exceptions that might be thrown
- 5. Include examples where helpful to demonstrate usage
+SELECTIVE DOCUMENTATION GUIDELINES:
+- Focus on documenting complex logic, public APIs, and non-obvious behavior
+- DO NOT document simple, self-explanatory code segments (e.g., simple getters/setters, basic React state updates)
+- DO NOT add comments to every function - prioritize where documentation adds real value
+- For simple UI components, a single comment explaining the component's purpose is often sufficient
+- Skip documenting trivial utility functions where the name clearly explains the purpose
 
- For TypeScript/TSX files:
- - Use JSDoc-style comments with /** ... */
- - Document parameters with @param {type} name - description
- - Document returns with @returns {type} description
- - Document interfaces, types and their properties
- - Note any generics or type constraints
+For elements that DO need documentation:
+1. Create a concise summary of what it does
+2. Document complex parameters and return values
+3. Document any non-obvious behavior, edge cases, or potential errors
+4. Include examples only for complex usage patterns
 
- For JavaScript/JSX files:
- - Use JSDoc-style comments with /** ... */
- - Document parameters with @param {type} name - description
- - Document returns with @returns description
- - Include type hints where possible
+For TypeScript/TSX files:
+- Use JSDoc-style comments with /** ... */
+- Document complex parameters with @param {type} name - description
+- Document non-trivial returns with @returns {type} description
+- Focus on interfaces and types that define your public API
 
- For Python files:
- - Use Google-style docstrings with triple quotes """
- - Format parameters as "Args:" followed by indented parameter descriptions
- - Format return values as "Returns:" followed by indented descriptions
- - Document exceptions with "Raises:" section
- - Follow PEP 257 conventions
+For JavaScript/JSX files:
+- Use JSDoc-style comments with /** ... */
+- Keep comments minimal and targeted to complex logic
+- Include type hints only where they add clarity
 
- IMPORTANT: Return the complete source code with added docstrings. DO NOT wrap the code in markdown code blocks (do not use \`\`\` markers). Just return the actual code file itself with docstrings added.
+For Python files:
+- Use Google-style docstrings with triple quotes """
+- Document only non-obvious parameters and return values
+- Follow PEP 257 conventions but be selective
 
- Maintain the existing code style and formatting. Only add or update docstrings—do not modify the actual code functionality. If an element already has partial documentation, enhance it rather than replacing it completely.
+IMPORTANT: Return the complete source code with added docstrings. DO NOT wrap the code in markdown code blocks. Maintain the existing code style and formatting. Only add or update docstrings—do not modify the actual code functionality.
 
- Focus especially on public exports and APIs that other developers would need to understand to use this code effectively.
+If an element already has documentation, enhance it only if it's missing important information.
 
- Code:
- ${fileContents}
- `;
+Code:
+${fileContents}
+`;
 		const response = await googleAi.models.generateContent({
 			model: 'gemini-2.5-pro',
 			contents: docString,

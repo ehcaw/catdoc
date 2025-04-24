@@ -1,2 +1,9 @@
 node_modules
 dist
+
+# Added by catdoc
+logs/
+docs/
+.catdoc.cache.json
+*.tree.json
+*.cache.json

@@ -27,7 +27,7 @@ const SPACE_BACKGROUNDS = {
    .  * |       \\  | .   .   .    .   .  .`,
 	chat: `
                           .  *  .  *  .   *
-                       *   .     .    .  
+                       *   .     .    .
                          .    *    .   *  .
                            *   .   *    .
                      *  .    .     .      *
@@ -51,7 +51,7 @@ const SPACE_BACKGROUNDS = {
  .  .  ( ==  ^  == ) *  .   .   .   *   .  .
    *     )         (   .   .   .    .   .  .
  .   .  (         )  .   .   *  .   *   .  .
-   .   (_(__)___(__)_).   .   .    .   .  .`
+   .   (_(__)___(__)_).   .   .    .   .  .`,
 };
 
 // Different cat poses for each option
@@ -80,9 +80,8 @@ const OPTION_CATS = {
                           \\ \\ ,  /      |
                            || |-_\\__   /
                           ((_/\`(____,-'
-                                        `
-										
-										,
+                                        `,
+
 	config: `
                        .-.
                       / /
@@ -101,7 +100,7 @@ const OPTION_CATS = {
                       (           )
                      ( (  )   (  ) )
                     (__(__)___(__)__)
-                                        `
+                                        `,
 };
 
 export const Menu: React.FC<MenuProps> = ({onSelect}) => {
@@ -121,7 +120,9 @@ export const Menu: React.FC<MenuProps> = ({onSelect}) => {
 		} else if (key.leftArrow) {
 			setSelectedIndex(prev => (prev % 2 === 1 ? prev - 1 : prev));
 		} else if (key.rightArrow) {
-			setSelectedIndex(prev => (prev % 2 === 0 && prev < options.length - 1 ? prev + 1 : prev));
+			setSelectedIndex(prev =>
+				prev % 2 === 0 && prev < options.length - 1 ? prev + 1 : prev,
+			);
 		} else if (key.return) {
 			const option = options[selectedIndex];
 			if (option) {
@@ -134,16 +135,22 @@ export const Menu: React.FC<MenuProps> = ({onSelect}) => {
 		<Box flexDirection="column" padding={1}>
 			<Box flexDirection="column" marginBottom={1} alignItems="center">
 				<Text color="white">{CAT_FRAME}</Text>
-				<Text bold color="white">Code Assistant</Text>
+				<Text bold color="white">
+					Catdoc: Your Dynamically Generated Documentation for Humans and LLMs
+					alike :3
+				</Text>
 				<Text color="white">Choose an option:</Text>
 			</Box>
-			
+
 			{/* First Row */}
 			<Box justifyContent="center">
 				{options.slice(0, 2).map((option, index) => (
 					<Box key={option.value} width={45} marginX={1} flexDirection="column">
 						<Box>
-							<Text color={index === selectedIndex ? 'white' : 'gray'} dimColor={index !== selectedIndex}>
+							<Text
+								color={index === selectedIndex ? 'white' : 'gray'}
+								dimColor={index !== selectedIndex}
+							>
 								{SPACE_BACKGROUNDS[option.value]}
 							</Text>
 						</Box>
@@ -170,7 +177,10 @@ export const Menu: React.FC<MenuProps> = ({onSelect}) => {
 				{options.slice(2).map((option, index) => (
 					<Box key={option.value} width={45} marginX={1} flexDirection="column">
 						<Box>
-							<Text color={index + 2 === selectedIndex ? 'white' : 'gray'} dimColor={index + 2 !== selectedIndex}>
+							<Text
+								color={index + 2 === selectedIndex ? 'white' : 'gray'}
+								dimColor={index + 2 !== selectedIndex}
+							>
 								{SPACE_BACKGROUNDS[option.value]}
 							</Text>
 						</Box>

@@ -9,7 +9,7 @@ const TypeScriptLang = TypeScriptModule.typescript;
 const TSXLang = TypeScriptModule.tsx;
 import * as crypto from 'crypto';
 import {generateDocStrings} from './DocStringManager.js';
-import {getDebugMode} from './ConfigMangagement.js';
+import {getDebugMode} from './ConfigManagement.js';
 
 const IMPORTANT_EXTENSIONS = ['.js', '.jsx', '.ts', '.tsx', '.py'];
 
@@ -419,6 +419,16 @@ function getQueryForLanguage(language: Language, scheme: string): Query | null {
 		console.error(`Query String:\n${queryString}`);
 		return null;
 	}
+}
+
+export function getStoredFileHash(rootDir: string, fileName: string) {
+	const hashFilePath = getCachePath(rootDir);
+	const hashesJson = JSON.parse(
+		fs.readFileSync(hashFilePath, {encoding: 'utf8'}),
+	);
+	const storedFileHash =
+		hashesJson['files'][fileName]['file_hash'] || 'SENTINEL';
+	return storedFileHash;
 }
 
 export function updateFileHashes(

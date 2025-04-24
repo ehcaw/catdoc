@@ -8,7 +8,7 @@ import * as fs from 'fs';
  * @param levelsUp Number of directory levels to go up from current file
  * @returns Absolute path to the project root
  */
-function getProjectRoot(levelsUp = 2): string {
+export function getProjectRoot(levelsUp = 2): string {
 	// For ESM modules
 	if (typeof import.meta !== 'undefined') {
 		const __filename = fileURLToPath(import.meta.url);

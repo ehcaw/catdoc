@@ -3,7 +3,9 @@ import path from 'node:path';
 import {simpleGit, SimpleGit} from 'simple-git';
 import {GoogleGenAI} from '@google/genai';
 import {FileDocumentation, ProjectDocumentation} from '../types/docs.js';
-import {apiKey, getDebugMode} from './ConfigMangagement.js';
+import {apiKey, getDebugMode} from './ConfigManagement.js';
+import chokidar from 'chokidar';
+import {Neo4jClient} from './Neo4j.js';
 
 // Debug logging setup
 const DEBUG = getDebugMode();
@@ -33,6 +35,18 @@ const debugLog = (message: string) => {
 
 debugLog('DocManager logging initialized');
 
+const config = {
+	url: 'bolt://localhost:7687', // URL for the Neo4j instance
+	username: 'neo4j', // Username for Neo4j authentication
+	password: 'pleaseletmein', // Password for Neo4j authentication
+	indexName: 'vector', // Name of the vector index
+	keywordIndexName: 'keyword', // Name of the keyword index if using hybrid search
+	searchType: 'vector' as const, // Type of search (e.g., vector, hybrid)
+	nodeLabel: 'Chunk', // Label for the nodes in the graph
+	textNodeProperty: 'text', // Property of the node containing text
+	embeddingNodeProperty: 'embedding', // Property of the node containing embedding
+};
+
 // Load environment variables
 
 export class DocManager {
@@ -41,13 +55,19 @@ export class DocManager {
 	private git: SimpleGit;
 	private genAI: GoogleGenAI;
 	private projectDocs: ProjectDocumentation;
-	private workspacePath: string;
+	private neo4jClient: Neo4jClient;
+	public workspacePath: string;
 	private readonly BATCH_SIZE = 5; // Number of concurrent API calls
 	private readonly IGNORED_PATTERNS = [
-		/\.json$/, // Skip JSON files
-		/docs\/files\//, // Skip documentation files
-		/docs\/html\//, // Skip generated HTML
+		/\.json$/,
+		/docs[\\\/](files|html)[\\\/]/, // Match both / and \ for cross-platform
+		/\.log$/, // Ignore log files
+		/\.lock$/, // Ignore lock files (e.g., package-lock.json)
+		/\bnode_modules\b/,
+		/\.git\b/,
 	];
+	public directoryWatcher;
+	private saveTimeout: NodeJS.Timeout | null = null;
 
 	constructor(workspacePath: string) {
 		debugLog(`Initializing DocManager with workspace path: ${workspacePath}`);
@@ -56,12 +76,93 @@ export class DocManager {
 		this.docsPath = path.join(this.workspacePath, 'docs');
 		this.htmlPath = path.join(this.docsPath, 'html');
 		this.git = simpleGit(this.workspacePath);
+		this.neo4jClient = new Neo4jClient(config, workspacePath);
+		this.initializeNeo4j().catch(error => {
+			debugLog(`Failed to initialize Neo4j: ${error}`);
+		});
 
 		// Initialize Google Gemini
 		if (!apiKey) {
 			throw new Error('GOOGLE_API_KEY is not set in environment variables');
 		}
 		this.genAI = new GoogleGenAI({apiKey: apiKey});
+		this.directoryWatcher = chokidar.watch([], {
+			persistent: true,
+			ignoreInitial: true,
+			// Ignore dotfiles/dirs and the docs directory itself
+			ignored: [
+				/(^|[\/\\])\../, // Ignore hidden files/directories
+				this.docsPath, // Ignore the entire docs directory
+				...this.IGNORED_PATTERNS, // Add other ignored patterns
+			],
+			// Debounce events slightly
+			awaitWriteFinish: {
+				stabilityThreshold: 500,
+				pollInterval: 100,
+			},
+		});
+
+		const debouncedUpdate = debounce(async (filePath: string) => {
+			// Use relative path for consistency with how paths might be stored
+			const relativePath = path.relative(this.workspacePath, filePath);
+			debugLog(`Watcher detected change in: ${relativePath}`);
+			try {
+				// Check again if it should be ignored (chokidar might catch initially ignored ones sometimes)
+				if (this.shouldIgnoreFile(relativePath)) {
+					debugLog(`Ignoring change in ${relativePath} based on pattern.`);
+					return;
+				}
+				// Check if file still exists before updating
+				if (fs.existsSync(filePath)) {
+					await this.updateDocumentation(relativePath);
+				} else {
+					debugLog(`File ${relativePath} deleted. Removing from docs.`);
+					this.removeDocumentation(relativePath); // Add method to handle deletions
+				}
+			} catch (error) {
+				debugLog(
+					`Error processing watched change for ${relativePath}: ${error}`,
+				);
+			}
+		}, 1000); // Debounce watcher events by 1 second
+
+		this.directoryWatcher
+			.on('change', filePath => debouncedUpdate(filePath))
+			.on('add', filePath => {
+				// Optional: Handle newly added files if needed, could trigger generation
+				const relativePath = path.relative(this.workspacePath, filePath);
+				if (
+					!this.shouldIgnoreFile(relativePath) &&
+					!this.projectDocs.files[relativePath]
+				) {
+					debugLog(
+						`Watcher detected new file: ${relativePath}. Generating docs.`,
+					);
+					// Use a separate debounced call or direct call if needed immediately
+					this.generateDocumentation(relativePath).catch(err =>
+						debugLog(
+							`Error generating docs for new file ${relativePath}: ${err}`,
+						),
+					);
+				}
+			})
+			.on('unlink', filePath => {
+				const relativePath = path.relative(this.workspacePath, filePath);
+				debugLog(`Watcher detected deletion: ${relativePath}. Removing docs.`);
+				this.removeDocumentation(relativePath);
+			})
+			.on('error', error => debugLog(`Watcher error: ${error}`));
+
+		if (!fs.existsSync(this.docsPath)) {
+			debugLog(`Creating docs directory structure at: ${this.docsPath}`);
+			fs.mkdirSync(this.docsPath, {recursive: true});
+			fs.mkdirSync(this.htmlPath, {recursive: true});
+			// No longer need 'files' directory
+			// fs.mkdirSync(path.join(this.docsPath, 'files'), {recursive: true});
+		}
+
+		this.projectDocs = this.loadDocs();
+		debugLog('DocManager initialization complete');
 
 		// Create docs directory if it doesn't exist
 		if (!fs.existsSync(this.docsPath)) {
@@ -74,6 +175,24 @@ export class DocManager {
 		// Load or initialize project documentation
 		this.projectDocs = this.loadDocs();
 		debugLog('DocManager initialization complete');
+	}
+	private async initializeNeo4j() {
+		try {
+			await this.neo4jClient.initialize();
+			debugLog('Neo4j client initialized successfully');
+		} catch (error) {
+			debugLog(`Error initializing Neo4j client: ${error}`);
+		}
+	}
+
+	// Utility debounce function
+	private debounceSave() {
+		if (this.saveTimeout) {
+			clearTimeout(this.saveTimeout);
+		}
+		this.saveTimeout = setTimeout(() => {
+			this.saveDocs();
+		}, 1500); // Wait 1.5 seconds after the last change before saving
 	}
 
 	private normalizePath(filePath: string): string {
@@ -115,6 +234,19 @@ export class DocManager {
 		} catch (error) {
 			debugLog(`Error getting file preview for ${filePath}: ${error}`);
 			return 'Unable to read file content';
+		}
+	}
+
+	public watchDirectory(dirPath: string): void {
+		const absolutePath = path.resolve(this.workspacePath, dirPath);
+		debugLog(`Adding to watcher: ${absolutePath}`);
+		// Make sure not to add ignored paths if possible, although chokidar handles it
+		if (
+			!this.shouldIgnoreFile(path.relative(this.workspacePath, absolutePath))
+		) {
+			this.directoryWatcher.add(absolutePath);
+		} else {
+			debugLog(`Skipping add to watcher (ignored): ${absolutePath}`);
 		}
 	}
 
@@ -228,6 +360,7 @@ export class DocManager {
 				type: fileType,
 				hash: (await this.git.revparse(['HEAD'])) || undefined,
 				preview: this.getFilePreview(absolutePath),
+				lastModified: fs.statSync(absolutePath).mtimeMs,
 			};
 
 			this.projectDocs.files[filePath] = doc;
@@ -246,6 +379,18 @@ export class DocManager {
 		} catch (error) {
 			debugLog(`Error generating documentation for ${filePath}: ${error}`);
 			throw error;
+		}
+	}
+
+	// Method to handle file deletions
+	removeDocumentation(filePath: string): void {
+		const normalizedFilePath = path.normalize(filePath).replace(/\\/g, '/');
+		if (this.projectDocs.files[normalizedFilePath]) {
+			debugLog(
+				`Removing documentation entry for deleted file: ${normalizedFilePath}`,
+			);
+			delete this.projectDocs.files[normalizedFilePath];
+			this.debounceSave(); // Save the change
 		}
 	}
 
@@ -290,6 +435,43 @@ export class DocManager {
 	}
 
 	getDocumentation(filePath: string): FileDocumentation | undefined {
+		console.log(this.projectDocs.files[filePath]);
 		return this.projectDocs.files[filePath];
 	}
+	getFileHash(filePath: string): string {
+		const docs = this.projectDocs.files[filePath];
+		return docs?.hash || '';
+	}
+	async updateDocumentation(filePath: string): Promise<void> {
+		const fileDocs = this.getDocumentation(filePath);
+		console.log(`old file docs: ${JSON.stringify(fileDocs)}`);
+		if (fileDocs) {
+			// fileDocs.content = fs.readFileSync(fileDocs.path, {encoding: 'utf8'});
+			// fileDocs.hash = generateHash(fileDocs.content);
+			// fileDocs.lastUpdated = String(Date.now());
+			// fileDocs.preview = this.getFilePreview(filePath);
+			// fileDocs.summary = await this.generateDocumentation(filePath)
+			const newFileDocs = await this.generateDocumentation(filePath);
+			this.projectDocs.files[filePath] = newFileDocs;
+			console.log(`new file docs: ${this.projectDocs.files[filePath]}`);
+			this.saveDocs();
+		}
+	}
+}
+
+function debounce<T extends (...args: any[]) => any>(
+	func: T,
+	wait: number,
+): (...args: Parameters<T>) => void {
+	let timeout: NodeJS.Timeout | null = null;
+	return function executedFunction(...args: Parameters<T>) {
+		const later = () => {
+			timeout = null;
+			func(...args);
+		};
+		if (timeout) {
+			clearTimeout(timeout);
+		}
+		timeout = setTimeout(later, wait);
+	};
 }
