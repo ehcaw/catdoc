@@ -1,7 +1,6 @@
 export interface FileDocumentation {
 	path: string;
 	lastUpdated: string;
-	content: string;
 	summary: string;
 	type: string;
 	hash?: string; // Git hash when last documented

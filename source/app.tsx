@@ -1,5 +1,6 @@
-import React, {useState, useEffect} from 'react'; // Fix: Add useEffect, remove useContext
-import {useInput, useApp, Box, Text, useStdout} from 'ink'; // Fix: Use useStdout instead of StdoutContext
+// catdoc/source/app.tsx
+import React, {useState, useEffect} from 'react';
+import {useInput, useApp, Box, Text, useStdout} from 'ink';
 import * as fs from 'fs';
 import * as path from 'path';
 import {Menu, MenuOption} from './components/Menu.js';
@@ -13,12 +14,13 @@ import {
 	gitignoreCatdocDirectories,
 } from './services/ConfigManagement.js';
 import {ConfigError} from './components/ConfigError.js';
+import {DocManager} from './services/DocManager.js'; // Import DocManager
 
 const DEBUG = getDebugMode();
 const LOGS_DIR = path.join(process.cwd(), 'logs');
 const LOG_FILE = path.join(LOGS_DIR, 'catdoc-debug.log');
 
-// Initialize logging (Keep as is)
+// Initialize logging
 try {
 	if (!fs.existsSync(LOGS_DIR)) {
 		fs.mkdirSync(LOGS_DIR, {recursive: true});
@@ -54,12 +56,43 @@ const App: React.FC<AppProps> = ({path: initialPath = process.cwd()}) => {
 	debugLog(`Resolved workspace path: ${workspacePath}`);
 
 	const [activeMode, setActiveMode] = useState<MenuOption | null>(null);
+	const [docManager, setDocManager] = useState<DocManager | null>(null); // State for DocManager
+	const [statusMessage, setStatusMessage] = useState<string | null>(null); // State for status messages
 	const {exit} = useApp();
-
-	// Fix: Use useStdout hook directly
 	const {stdout} = useStdout();
 	const terminalHeight = stdout?.rows ?? 24;
 	const terminalWidth = stdout?.columns ?? 80;
+
+	// Initialize DocManager once on mount
+	useEffect(() => {
+		debugLog('Initializing DocManager instance...');
+		const manager = new DocManager(workspacePath);
+		manager
+			.initialize()
+			.then(success => {
+				if (success) {
+					setDocManager(manager);
+					debugLog(
+						'DocManager initialized successfully (background generation started).',
+					);
+				} else {
+					debugLog('DocManager initialization failed.');
+					setStatusMessage('Error initializing documentation manager.');
+				}
+			})
+			.catch(error => {
+				debugLog(`Error during DocManager initialization: ${error}`);
+				setStatusMessage('Error initializing documentation manager.');
+			});
+
+		// Cleanup DocManager on unmount
+		return () => {
+			debugLog('Cleaning up DocManager...');
+			manager
+				?.shutdown()
+				.catch(err => debugLog(`Error shutting down DocManager: ${err}`));
+		};
+	}, [workspacePath]);
 
 	const handleMenuSelect = (option: MenuOption) => {
 		setActiveMode(option);
@@ -67,12 +100,36 @@ const App: React.FC<AppProps> = ({path: initialPath = process.cwd()}) => {
 
 	const handleBack = () => {
 		setActiveMode(null);
+		setStatusMessage(null); // Clear status message when going back
 	};
 
-	useInput((input, key) => {
+	useInput(async (input, key) => {
 		if (key.ctrl && input.toLowerCase() === 'c') {
 			debugLog('Ctrl+C detected, exiting.');
 			exit();
+		}
+		if (key.ctrl && input.toLowerCase() === 'r') {
+			if (docManager) {
+				debugLog('Ctrl+R detected, starting documentation regeneration...');
+				setStatusMessage(
+					'Regenerating all documentation (this may take a while)...',
+				);
+				try {
+					const result = await docManager.regenerateAllDocs();
+					setStatusMessage(
+						`Documentation regeneration complete: ${result.total} files processed.`,
+					);
+					// Optionally clear the message after a few seconds
+					setTimeout(() => setStatusMessage(null), 5000);
+				} catch (error) {
+					debugLog(`Error regenerating documentation: ${error}`);
+					setStatusMessage('Error regenerating documentation.');
+					setTimeout(() => setStatusMessage(null), 5000);
+				}
+			} else {
+				setStatusMessage('DocManager not ready yet.');
+				setTimeout(() => setStatusMessage(null), 3000);
+			}
 		}
 	});
 
@@ -83,18 +140,32 @@ const App: React.FC<AppProps> = ({path: initialPath = process.cwd()}) => {
 
 	let content: JSX.Element;
 
-	if (activeMode === null) {
+	// Show loading state while DocManager initializes
+	if (!docManager && !statusMessage?.startsWith('Error')) {
+		content = (
+			<Box>
+				<Text>Initializing documentation system...</Text>
+			</Box>
+		);
+	} else if (activeMode === null) {
 		content = (
 			<Box
 				width={terminalWidth}
 				height={terminalHeight}
+				flexDirection="column" // Arrange elements vertically
 				justifyContent="center"
 				alignItems="center"
 			>
 				<Menu onSelect={handleMenuSelect} />
+				{statusMessage && (
+					<Box marginTop={1}>
+						<Text color="yellow">{statusMessage}</Text>
+					</Box>
+				)}
 			</Box>
 		);
 	} else {
+		// Render the selected mode
 		switch (activeMode) {
 			case 'generate':
 				if (!apiKey) {
@@ -140,22 +211,29 @@ const App: React.FC<AppProps> = ({path: initialPath = process.cwd()}) => {
 						</Text>
 					</Box>
 				);
-				// Separate useEffect for resetting invalid mode
-				useEffect(() => {
-					if (
-						activeMode &&
-						!['generate', 'chat', 'config', 'tutorial'].includes(activeMode)
-					) {
-						setActiveMode(null);
-					}
-				}, [activeMode]);
+				// Reset invalid mode
+				if (
+					activeMode &&
+					!['generate', 'chat', 'config', 'tutorial'].includes(activeMode)
+				) {
+					setActiveMode(null);
+				}
 				break;
 		}
 	}
 
+	// Ensure the main Box takes full size and wraps the content
 	return (
-		<Box width={terminalWidth} height={terminalHeight}>
+		<Box width={terminalWidth} height={terminalHeight} flexDirection="column">
+			{/* Render the main content */}
 			{content}
+
+			{/* Display status message at the bottom if not in menu view */}
+			{statusMessage && activeMode !== null && (
+				<Box position="absolute" paddingX={1}>
+					<Text color="yellow">{statusMessage}</Text>
+				</Box>
+			)}
 		</Box>
 	);
 };

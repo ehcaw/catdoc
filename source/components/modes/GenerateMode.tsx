@@ -338,7 +338,6 @@ export const GenerateMode: React.FC<{
 						lastModified: fs.statSync(absolutePath).mtimeMs, // Get actual mtime
 						type: path.extname(relativePath).slice(1),
 						lastUpdated: '', // Not applicable
-						content: '', // Don't store full content for common files
 					});
 					setLoadingMessage('');
 					return;
