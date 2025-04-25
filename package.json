@@ -32,6 +32,7 @@
 		"clipboardy": "^4.0.0",
 		"crypto": "^1.0.1",
 		"dotenv": "^16.5.0",
+		"figures": "^6.1.0",
 		"fs": "^0.0.1-security",
 		"ignore": "^7.0.3",
 		"ink": "^4.1.0",

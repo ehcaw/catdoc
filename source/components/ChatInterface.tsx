@@ -4,6 +4,8 @@ import {streamText} from 'ai';
 import {createGoogleGenerativeAI} from '@ai-sdk/google';
 import {apiKey} from '../services/ConfigManagement.js';
 import * as fs from 'fs';
+import * as path from 'path';
+import figures from 'figures';
 
 // Define the structure for a message
 interface Message {
@@ -12,42 +14,84 @@ interface Message {
 	text: string;
 }
 
+// Cool cat ASCII art for welcome message
+const CAT_LOGO =
+	`
+   /\\     /\\
+  {  ` +
+	'`' +
+	`---'  }
+  {  O   O  }
+  ~~>  V  <~~  CatDoc Assistant
+   \\  ===  /
+    \\___/
+`;
+
 /**
  * A terminal-based chatbot interface component using Ink.
  */
 const ChatInterface: React.FC<{}> = ({}) => {
-	// State for the list of messages in the chat
+	// State definitions
 	const [messages, setMessages] = useState<Message[]>([
 		{
 			id: 0,
 			sender: 'bot',
-			text: 'Welcome! Ask me anything about your codebase.',
+			text: `Welcome to CatDoc! ${figures.star} I'm your purr-sonal code assistant.\nAsk me anything about your codebase and I'll try to help!`,
 		},
 	]);
-	// State for the current text entered by the user
 	const [inputValue, setInputValue] = useState<string>('');
-	// State to track if the bot is currently processing a response
 	const [isLoading, setIsLoading] = useState<boolean>(false);
-	// State to store document context (loaded once)
 	const [docsContext, setDocsContext] = useState<string>('');
-	// Access Ink's app context to allow exiting
+	const [isDocsLoading, setIsDocsLoading] = useState<boolean>(true);
+	const [thinkingDots, setThinkingDots] = useState('');
 	const {exit} = useApp();
+
+	// Animation for thinking state
+	useEffect(() => {
+		if (!isLoading) return;
+
+		const interval = setInterval(() => {
+			setThinkingDots(prev => {
+				if (prev === '...') return '';
+				return prev + '.';
+			});
+		}, 300);
+
+		return () => clearInterval(interval);
+	}, [isLoading]);
 
 	// Load documents once when component mounts
 	useEffect(() => {
+		const docsFilePath = path.join(process.cwd(), 'docs', 'docs.json');
+
 		try {
-			const docsJson = fs.readFileSync('docs/docs.json', {encoding: 'utf8'});
-			setDocsContext(docsJson);
+			if (fs.existsSync(docsFilePath)) {
+				const docsJson = fs.readFileSync(docsFilePath, {encoding: 'utf8'});
+				setDocsContext(docsJson);
+				console.log('Documentation loaded successfully');
+			} else {
+				console.error(`Documentation file not found at: ${docsFilePath}`);
+				setMessages(prev => [
+					...prev,
+					{
+						id: Date.now(),
+						sender: 'bot',
+						text: `${figures.warning} Meow! I couldn't find any documentation files. I may not be able to answer code-specific questions.`,
+					},
+				]);
+			}
 		} catch (error) {
-			console.error('Error loading documentation:', error);
+			console.error('Error checking documentation:', error);
 			setMessages(prev => [
 				...prev,
 				{
 					id: Date.now(),
 					sender: 'bot',
-					text: 'Warning: Failed to load codebase documentation. I may not be able to answer code-specific questions.',
+					text: `${figures.warning} Meow! Something went wrong while loading the documentation. I may not be able to help with code questions.`,
 				},
 			]);
+		} finally {
+			setIsDocsLoading(false);
 		}
 	}, []);
 
@@ -61,15 +105,12 @@ const ChatInterface: React.FC<{}> = ({}) => {
 	 * Creates a conversational prompt that includes chat history and documentation context.
 	 */
 	const createConversationalPrompt = (messageHistory: Message[]) => {
-		// Format previous conversation for context
 		const conversationContext = messageHistory
-			.map(
-				msg => `${msg.sender === 'user' ? 'User' : 'Assistant'}: ${msg.text}`,
-			)
+			.map(msg => `${msg.sender === 'user' ? 'User' : 'CatDoc'}: ${msg.text}`)
 			.join('\n\n');
 
-		// Create the system prompt with both document and conversation context
-		return `You are an intelligent assistant with access to a knowledge base of documents about this codebase.
+		return `You are CatDoc, a helpful, cat-themed code assistant with access to knowledge about this codebase.
+Your personality is friendly, helpful, and occasionally uses subtle cat puns or references.
 
 ## Documents Context
 ${docsContext}
@@ -84,7 +125,8 @@ ${conversationContext}
 4. Keep responses concise yet comprehensive, focusing on the most relevant information.
 5. If code examples would be helpful, include them formatted appropriately.
 6. Maintain a conversational tone and reference previous exchanges when appropriate.
-7. Do not make up information that isn't supported by the documents or your general knowledge.
+7. Occasionally add subtle cat-themed phrases or puns (but don't overdo it).
+8. Do not make up information that isn't supported by the documents or your general knowledge.
 
 Please respond to the user's latest message.`;
 	};
@@ -93,13 +135,10 @@ Please respond to the user's latest message.`;
 	 * Gets a streaming response from the bot.
 	 */
 	const getBotResponse = async (query: string) => {
-		// Create conversational prompt with full message history
 		const systemPrompt = createConversationalPrompt([
 			...messages,
 			{id: Date.now(), sender: 'user', text: query},
 		]);
-
-		// Return the stream
 		return streamText({
 			model: model,
 			system: systemPrompt,
@@ -112,41 +151,29 @@ Please respond to the user's latest message.`;
 	 */
 	const handleSubmit = useCallback(async () => {
 		const textToSubmit = inputValue.trim();
-		// Don't submit if input is empty or bot is already working
-		if (!textToSubmit || isLoading) {
-			return;
-		}
+		if (!textToSubmit || isLoading || isDocsLoading) return;
 
-		// Add the user's message to the chat
 		const userMessage: Message = {
 			id: Date.now(),
 			sender: 'user',
 			text: textToSubmit,
 		};
 		setMessages(prev => [...prev, userMessage]);
-
-		// Clear the input field and set loading state
 		setInputValue('');
 		setIsLoading(true);
 
 		try {
-			// Create a temporary bot message that will be updated as new chunks arrive
 			const botMessageId = Date.now() + 1;
 			setMessages(prev => [
 				...prev,
 				{id: botMessageId, sender: 'bot', text: ''},
 			]);
 
-			// Get streaming response from the bot
 			const stream = await getBotResponse(textToSubmit);
-
-			// Handle the stream
 			let fullText = '';
 
 			for await (const chunk of stream.textStream) {
 				fullText += chunk;
-
-				// Update the bot's message with accumulated text so far
 				setMessages(prev =>
 					prev.map(msg =>
 						msg.id === botMessageId ? {...msg, text: fullText} : msg,
@@ -154,78 +181,104 @@ Please respond to the user's latest message.`;
 				);
 			}
 		} catch (error: any) {
-			// If bot interaction fails, show an error message
 			console.error('Bot response error:', error);
 			const errorMessage: Message = {
 				id: Date.now() + 1,
 				sender: 'bot',
-				text: `Sorry, I encountered an error. Please try again. ${error}`,
+				text: `${figures.cross} Meow! I encountered an error. Please try again. ${error}`,
 			};
 			setMessages(prev => [...prev, errorMessage]);
 		} finally {
-			// Reset loading state regardless of success or failure
 			setIsLoading(false);
+			setThinkingDots('');
 		}
-	}, [inputValue, isLoading, messages, docsContext]);
+	}, [inputValue, isLoading, isDocsLoading, messages, docsContext]);
 
-	// Rest of your component code stays the same...
-
-	// Use Ink's input hook to capture keyboard events
+	// Input handling
 	useInput((input, key) => {
-		// Ignore input while the bot is processing
-		if (isLoading) return;
+		if (isLoading || isDocsLoading) return;
 
 		if (key.return) {
-			// Handle submission on Enter key
 			handleSubmit();
 		} else if (key.backspace || key.delete) {
-			// Handle backspace/delete
 			setInputValue(prev => prev.slice(0, -1));
 		} else if (key.ctrl && input === 'c') {
-			// Allow Ctrl+C to exit the application
 			exit();
 		} else if (!key.ctrl && !key.meta && !key.shift && input) {
-			// Append printable characters to the input state
 			setInputValue(prev => prev + input);
 		}
 	});
 
-	// Your rendering code stays the same...
-
+	// Render UI
 	return (
-		// Same UI implementation
 		<Box
 			flexDirection="column"
 			borderStyle="round"
-			borderColor="cyan"
+			borderColor="magenta"
 			padding={1}
 			width="100%"
 		>
+			{/* Header with cat logo */}
+			<Box marginBottom={1} justifyContent="center">
+				<Text color="cyan">{CAT_LOGO}</Text>
+			</Box>
+
+			{/* Divider */}
+			<Box borderStyle="double" borderColor="magenta" marginBottom={1} />
+
 			{/* Message Display Area */}
 			<Box flexGrow={1} flexDirection="column" marginBottom={1}>
-				{messages.map(msg => (
-					<Box key={msg.id} flexDirection="row">
-						<Text bold color={msg.sender === 'user' ? 'blue' : 'green'}>
-							{msg.sender === 'user' ? 'You: ' : 'Bot: '}
+				{/* Show loading state for docs */}
+				{isDocsLoading && (
+					<Box>
+						<Text color="yellow">
+							{figures.arrowRight} Loading codebase knowledge{thinkingDots}
 						</Text>
-						<Text>{msg.text}</Text>
+					</Box>
+				)}
+
+				{/* Display Messages */}
+				{messages.map(msg => (
+					<Box key={msg.id} flexDirection="column" marginBottom={1}>
+						<Box>
+							<Text bold color={msg.sender === 'user' ? 'blue' : 'green'}>
+								{msg.sender === 'user'
+									? `${figures.pointer} You:`
+									: `${figures.star} CatDoc:`}
+							</Text>
+						</Box>
+						<Box paddingLeft={2}>
+							<Text wrap="wrap">{msg.text}</Text>
+						</Box>
 					</Box>
 				))}
-				{isLoading && !messages[messages.length - 1]?.text && (
+
+				{/* Thinking animation */}
+				{isLoading && messages[messages.length - 1]?.sender !== 'bot' && (
 					<Box>
-						<Text color="yellow">Bot is thinking...</Text>
+						<Text color="yellow">
+							{figures.star} Thinking{thinkingDots}
+						</Text>
 					</Box>
 				)}
 			</Box>
 
 			{/* Input Area */}
-			<Box borderStyle="single" borderColor="gray" />
+			<Box borderStyle="single" borderColor="cyan" />
 			<Box marginTop={1}>
-				<Text bold> {'>'} </Text>
+				<Text bold color="blue">
+					{figures.pointer}{' '}
+				</Text>
 				<Text>{inputValue}</Text>
 				{!isLoading && <Text>_</Text>}
 			</Box>
-			<Text dimColor>(Type your message and press Enter. Ctrl+C to exit.)</Text>
+			<Box marginTop={1}>
+				<Text dimColor>
+					{isDocsLoading
+						? 'Loading documentation... please wait.'
+						: `(Type your question and press Enter ${figures.arrowRight} | Ctrl+C to exit)`}
+				</Text>
+			</Box>
 		</Box>
 	);
 };
