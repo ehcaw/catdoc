@@ -1,4 +1,3 @@
-// catdoc/source/components/modes/ChatMode.tsx
 import React, {useState, useEffect} from 'react';
 import {useInput, Box, Text} from 'ink';
 import ChatInterface from '../ChatInterface.js';
@@ -8,12 +7,12 @@ export const ChatMode: React.FC<{
 	onBack: () => void;
 	workspacePath: string;
 }> = ({onBack}) => {
-	const [loading, _setLoading] = useState<boolean>(true);
+	const [_loading, setLoading] = useState<boolean>(true);
 	const [error, _setError] = useState<string | null>(null);
 
 	useEffect(() => {
 		if (fs.existsSync('docs/docs.json')) {
-			_setLoading(false);
+			setLoading(false);
 		}
 	}, []);
 
@@ -22,14 +21,6 @@ export const ChatMode: React.FC<{
 			onBack();
 		}
 	});
-
-	if (loading) {
-		return (
-			<Box flexDirection="column" padding={1}>
-				<Text>Connecting to database, please wait...</Text>
-			</Box>
-		);
-	}
 
 	if (error) {
 		return (
@@ -40,5 +31,10 @@ export const ChatMode: React.FC<{
 		);
 	}
 
-	return <ChatInterface />;
+	// Simple container for ChatInterface
+	return (
+		<Box flexDirection="column" flexGrow={1}>
+			<ChatInterface />
+		</Box>
+	);
 };
